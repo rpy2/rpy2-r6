@@ -2,10 +2,11 @@ import rpy2.rinterface
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
+import typing
 import warnings
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    R6_pack = importr('R6', on_conflict="warn")
+    warnings.simplefilter('ignore')
+    R6_pack = importr('R6', on_conflict='warn')
 
 TARGET_VERSION = '2.4.'
 
@@ -29,7 +30,9 @@ dollar = rpy2.robjects.baseenv['$']
 _CLASSMAP = dict()
 
 
-def dollar_getter(name: str) -> rpy2.rinterface.Sexp:
+def dollar_getter(name: str) -> (
+        typing.Callable[[rinterface.SexpEnvironment], rinterface.Sexp]
+):
     """Convenience partial function for the R `$`.
 
     The R function `$` fetches attributes and is often
@@ -45,7 +48,18 @@ def dollar_getter(name: str) -> rpy2.rinterface.Sexp:
     return inner
 
 
-def r6_createcls(clsgenerator: 'R6ClassGenerator'):
+def _build_attr_dict(clsgenerator: 'R6ClassGenerator') -> (
+        typing.Dict[str, typing.Union[None, property]]
+):
+    res = dict()
+    if clsgenerator.public_methods.names != rpy2.robjects.NULL:
+        res.update((x, None) for x in clsgenerator.public_methods.names)
+    if clsgenerator.public_fields.names != rpy2.robjects.NULL:
+        res.update((x, property) for x in clsgenerator.public_fields.names)
+    return res
+
+
+def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     """Create a Python class matching R's R6ClassGenerator.
 
     Args:
@@ -57,7 +71,7 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator'):
     cls = R6Meta(
         clsgenerator.classname,
         (R6, ),
-        {'__PUBLIC_ATTRS__': set(clsgenerator.public_methods.names)}
+        {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator)}
     )
     return cls
 
@@ -74,45 +88,53 @@ def _r6class_new(self):
 class R6Meta(type):
     
     def __new__(meta, name, bases, attrs, **kwds):
-        assert '__PUBLIC_ATTRS__' in attrs
-        for default_attr in (attrs['__PUBLIC_ATTRS__']
-                             .difference(attrs.keys())):
-            attrs[default_attr] = property(dollar_getter(default_attr))
+        assert '__DEFAULT_ATTRS__' in attrs
+        default_attrs = attrs['__DEFAULT_ATTRS__']
+        attr_names = set(default_attrs)
+        assert len(attr_names) == len(default_attrs)
+        for key in (attr_names
+                    .difference(attrs.keys())):
+            wrapper = default_attrs[key]
+            if wrapper:
+                attrs[key] = wrapper(dollar_getter(key))
+            else:
+                attrs[key] = dollar_getter(key)
         cls = type.__new__(meta, name, bases, attrs, **kwds)
         return cls
 
 
 class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
+    """Factory of constructors for R6 objects."""
 
-    __PUBLIC_ATTRS__ = {
-        'active',
-        'class',
-        'classname',
-        'clone_method',
-        'debug',
-        'debug_names',
-        'get_inherit',
-        'has_private',
-        'inherit',
-        'is_locked',
-        'lock',
-        'lock_class',
-        'lock_objects',
-        # 'new' has a special treatment. see __init__().
-        'parent_env',
-        'portable',
-        'private_fields',
-        'private_methods',
-        'public_fields',
-        'public_methods',
-        'self',
-        'set',
-        'undebug',
-        'unlock'
+    __DEFAULT_ATTRS__ = {
+        'active': None,
+        'class': property,
+        'classname': property,
+        'clone_method': None,
+        'debug': None,
+        'debug_names': property,
+        'get_inherit': None,
+        'has_private': property,
+        'inherit': None,
+        'is_locked': property,
+        'lock': None,
+        'lock_class': property,
+        'lock_objects': property,
+        # 'new' has a special treatment. see __init__.
+        'parent_env': property,
+        'portable': property,
+        'private_fields': property,
+        'private_methods': property,
+        'public_fields': property,
+        'public_methods': property,
+        'self': property,
+        'set': None,
+        'undebug': None,
+        'unlock': None
     }
 
-    def __init__(self, robj):
+    def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         # TODO: check that robj is genuinely an R R6ClassGenerator
         super().__init__(o=robj)
         
@@ -136,7 +158,7 @@ class R6ClassGenerator(rpy2.robjects.Environment,
 class R6(rpy2.robjects.Environment,
          metaclass=R6Meta):
 
-    __PUBLIC_ATTRS__ = set()
+    __DEFAULT_ATTRS__ = {}
 
     def __repr__(self):
         return '{} at {}'.format(repr(type(self)), hex(id(self)))
