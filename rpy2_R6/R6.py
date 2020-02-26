@@ -31,7 +31,7 @@ _CLASSMAP = dict()
 
 
 def dollar_getter(name: str) -> (
-        typing.Callable[[rpy2.rinterface.SexpEnvironment], rinterface.Sexp]
+        typing.Callable[[rpy2.rinterface.SexpEnvironment], rpy2.rinterface.Sexp]
 ):
     """Convenience partial function for the R `$`.
 
