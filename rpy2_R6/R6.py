@@ -31,7 +31,7 @@ _CLASSMAP = dict()
 
 
 def dollar_getter(name: str) -> (
-        typing.Callable[[rinterface.SexpEnvironment], rinterface.Sexp]
+        typing.Callable[[rpy2.rinterface.SexpEnvironment], rinterface.Sexp]
 ):
     """Convenience partial function for the R `$`.
 
@@ -86,7 +86,7 @@ def _r6class_new(self):
 
 
 class R6Meta(type):
-    
+
     def __new__(meta, name, bases, attrs, **kwds):
         assert '__DEFAULT_ATTRS__' in attrs
         default_attrs = attrs['__DEFAULT_ATTRS__']
@@ -137,7 +137,7 @@ class R6ClassGenerator(rpy2.robjects.Environment,
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         # TODO: check that robj is genuinely an R R6ClassGenerator
         super().__init__(o=robj)
-        
+
         if not hasattr(self, 'new'):
             self.new = _r6class_new(self)
 
