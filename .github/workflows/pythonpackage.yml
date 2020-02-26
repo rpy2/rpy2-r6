@@ -24,9 +24,7 @@ jobs:
         r-version: ${{ matrix.r-version }}
     - name: Install R dependencies
       run: |
-        install.packages("remotes")
-        remotes::install_deps(dependencies = TRUE)
-        remotes::install_dev("R6")
+        install.packages("R6")
       shell: Rscript {0}
     - name: Install dependencies
       run: |
