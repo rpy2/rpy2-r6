@@ -83,7 +83,8 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     cls = R6Meta(
         _classname(clsgenerator),
         (R6, ),
-        {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator)}
+        {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator),
+         '__R6CLASSGENERATOR__': property(clsgenerator)}
     )
     return cls
 
