@@ -30,7 +30,7 @@ dollar = rpy2.robjects.baseenv['$']
 _CLASSMAP = dict()
 
 
-def _default_classmap(clsgenerator):
+def _static_classmap(clsgenerator):
     return _CLASSMAP.get(_classname(clsgenerator), R6)
 
 
@@ -168,8 +168,6 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         'unlock': None
     }
 
-    __CLASSMAP__ = _default_classmap
-
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         # TODO: check that robj is genuinely an R R6ClassGenerator
         super().__init__(o=robj)
@@ -177,6 +175,16 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         r6cls = self.__CLASSMAP__()
         if not hasattr(self, 'new'):
             self.new = _r6class_new(self, r6cls)
+
+
+class R6StaticClassGenerator(R6ClassGenerator,
+                             metaclass=R6Meta):
+    __CLASSMAP__ = _static_classmap
+
+
+class R6DynamicClassGenerator(R6ClassGenerator,
+                              metaclass=R6Meta):
+    __CLASSMAP__ = _dynamic_classmap
 
 
 class R6(rpy2.robjects.Environment,

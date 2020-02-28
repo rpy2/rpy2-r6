@@ -19,22 +19,20 @@ def _list_names(obj):
         ('public = list(x = function() {123}, y = "a")', ('x',), ('y',))
     )
 )
-def test_R6ClassWrapper_from_Environment(
+def test_R6StaticClassWrapper(
         callparams, pub_method_names, pub_field_names):
     # Without custom conversion, R6ClassGenerator objects
     # are just environments.
     env = ro.r('R6Class("foo", {})'.format(callparams))
     assert isinstance(env, ri.SexpEnvironment)
-    clsi = r6.R6ClassGenerator(env)
+    clsi = r6.R6StaticClassGenerator(env)
     assert clsi.classname[0] == 'foo'
     assert all(x in _list_names(clsi.public_methods) for x in pub_method_names)
     assert all(x in _list_names(clsi.public_fields) for x in pub_field_names)
 
 
-def test_R6Class_dynamic_classmap():
-    class OtherGenerator(r6.R6ClassGenerator):
-        __CLASSMAP__ = r6._dynamic_classmap
-    clsi = OtherGenerator(
+def test_R6DynamicClassWrapper():
+    clsi = r6.R6DynamicClassGenerator(
         ro.r('R6Class("Foo", public = list(x = function(x) { x * 2 }))')
     )
     r6instance = clsi.new()
