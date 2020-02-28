@@ -29,6 +29,9 @@ dollar = rpy2.robjects.baseenv['$']
 
 _CLASSMAP = dict()
 
+def _default_classmap(clsgenerator):
+    return _CLASSMAP.get(clsgenerator.classname, R6)
+
 
 def dollar_getter(name: str) -> (
         typing.Callable[[rpy2.rinterface.SexpEnvironment], rpy2.rinterface.Sexp]
@@ -76,20 +79,35 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     return cls
 
 
-def _r6class_new(self):
+def _dynamic_classmap(clsgenerator):
+    classname = clsgenerator.classname
+    if classname not in _CLASSMAP:
+        _CLASSMAP[classname] = r6_createcls(clsgenerator)
+    return _CLASSMAP[classname]
+
+
+def _r6class_new(clsgenerator, r6cls):
     """Wrapper for instance-specific static method."""
     def inner(*args, **kwargs):
-        res = dollar(self, 'new')(*args, **kwargs)
-        cls = _CLASSMAP.get(self.classname, R6)
-        return cls(res)
+        res = dollar(clsgenerator, 'new')(*args, **kwargs)
+        return r6cls(res)
     return inner
 
 
 class R6Meta(type):
 
     def __new__(meta, name, bases, attrs, **kwds):
-        assert '__DEFAULT_ATTRS__' in attrs
-        default_attrs = attrs['__DEFAULT_ATTRS__']
+        default_attrs = attrs.get('__DEFAULT_ATTRS__', None)
+        if default_attrs is None:
+            for b in bases:
+                if hasattr(b, '__DEFAULT_ATTRS__'):
+                    default_attrs = b.__DEFAULT_ATTRS__
+                    break
+        if default_attrs is None:
+            raise ValueError(
+                'Classes using the type {} must have an '
+                'attribute __DEFAULT_ATTRS__'.format(str(meta))
+            )
         attr_names = set(default_attrs)
         assert len(attr_names) == len(default_attrs)
         for key in (attr_names
@@ -134,12 +152,15 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         'unlock': None
     }
 
+    __CLASSMAP__ = _default_classmap
+
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         # TODO: check that robj is genuinely an R R6ClassGenerator
         super().__init__(o=robj)
 
+        r6cls = self.__CLASSMAP__(self)
         if not hasattr(self, 'new'):
-            self.new = _r6class_new(self)
+            self.new = _r6class_new(self, r6cls)
 
         self._classname = None
 
