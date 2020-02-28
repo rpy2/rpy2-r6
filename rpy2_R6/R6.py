@@ -31,7 +31,7 @@ _CLASSMAP = dict()
 
 
 def _default_classmap(clsgenerator):
-    return _CLASSMAP.get(clsgenerator.classname, R6)
+    return _CLASSMAP.get(_classname(clsgenerator), R6)
 
 
 def dollar_getter(name: str) -> (
@@ -50,6 +50,14 @@ def dollar_getter(name: str) -> (
     def inner(obj):
         return dollar(obj, name)
     return inner
+
+
+def _classname(obj):
+    res = dollar(obj, 'classname')
+    if res is not rpy2.robjects.NULL:
+        assert len(res) == 1
+        res = res[0]
+    return res
 
 
 def _build_attr_dict(clsgenerator: 'R6ClassGenerator') -> (
@@ -73,7 +81,7 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
       A Python class
     """
     cls = R6Meta(
-        clsgenerator.classname,
+        _classname(clsgenerator),
         (R6, ),
         {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator)}
     )
@@ -81,7 +89,7 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
 
 
 def _dynamic_classmap(clsgenerator):
-    classname = clsgenerator.classname
+    classname = _classname(clsgenerator)
     if classname not in _CLASSMAP:
         _CLASSMAP[classname] = r6_createcls(clsgenerator)
     return _CLASSMAP[classname]
@@ -167,22 +175,8 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         super().__init__(o=robj)
 
         r6cls = self.__CLASSMAP__()
-
         if not hasattr(self, 'new'):
             self.new = _r6class_new(self, r6cls)
-
-        self._classname = None
-
-    @property
-    def classname(self):
-        if not self._classname:
-            classname = dollar(self, 'classname')
-            if classname is rpy2.robjects.NULL:
-                self._classname = rpy2.robjects.NULL
-            else:
-                assert len(classname) == 1
-                self._classname = classname[0]
-        return self._classname
 
 
 class R6(rpy2.robjects.Environment,

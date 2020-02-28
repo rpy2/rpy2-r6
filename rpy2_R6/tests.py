@@ -26,7 +26,7 @@ def test_R6ClassWrapper_from_Environment(
     env = ro.r('R6Class("foo", {})'.format(callparams))
     assert isinstance(env, ri.SexpEnvironment)
     clsi = r6.R6ClassGenerator(env)
-    assert clsi.classname == 'foo'
+    assert clsi.classname[0] == 'foo'
     assert all(x in _list_names(clsi.public_methods) for x in pub_method_names)
     assert all(x in _list_names(clsi.public_fields) for x in pub_field_names)
 
