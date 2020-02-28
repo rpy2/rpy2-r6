@@ -96,6 +96,13 @@ def _r6class_new(clsgenerator, r6cls):
 
 
 class R6Meta(type):
+    """Metaclass for R6 obbjects.
+
+    The metaclass is looking a class attribute __DEFAULT_ATTRS__, that
+    is a dict[str, None|property]. The str key is the name of an attribute
+    for the R6 object in R for which, in the absence of an attribute of the
+    same name in the class definition, the R object will be dynamically
+    mapped to a Python attribute of the same name at class definition."""
 
     def __new__(meta, name, bases, attrs, **kwds):
         default_attrs = attrs.get('__DEFAULT_ATTRS__', None)
@@ -159,7 +166,8 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         # TODO: check that robj is genuinely an R R6ClassGenerator
         super().__init__(o=robj)
 
-        r6cls = self.__CLASSMAP__(self)
+        r6cls = self.__CLASSMAP__()
+
         if not hasattr(self, 'new'):
             self.new = _r6class_new(self, r6cls)
 
