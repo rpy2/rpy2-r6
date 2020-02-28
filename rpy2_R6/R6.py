@@ -29,6 +29,7 @@ dollar = rpy2.robjects.baseenv['$']
 
 _CLASSMAP = dict()
 
+
 def _default_classmap(clsgenerator):
     return _CLASSMAP.get(clsgenerator.classname, R6)
 
