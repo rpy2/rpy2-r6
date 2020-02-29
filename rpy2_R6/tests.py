@@ -38,3 +38,8 @@ def test_R6DynamicClassWrapper():
     r6instance = clsi.new()
     assert all(hasattr(r6instance, x) for x in ('x'))
     type(r6instance).__name__ = 'Foo'
+
+
+def test_isr6classgenerator():
+    clsi = ro.r('R6Class("Foo", public = list(x = function(x) { x * 2 }))')
+    assert r6.is_r6classgenerator(clsi)

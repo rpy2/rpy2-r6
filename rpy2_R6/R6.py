@@ -138,6 +138,15 @@ class R6Meta(type):
         return cls
 
 
+def is_r6classgenerator(robj: rpy2.rinterface.Sexp): -> bool
+    """Determine if an R objects is an R2ClassGenerator."""
+    return (
+        robj.typeof == rpy2.rinterface.RTYPES.ENVSXP
+        and
+        tuple(robj.rclass) == ('R6ClassGenerator',)
+    )
+
+
 class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
     """Factory of constructors for R6 objects."""
@@ -176,6 +185,7 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         r6cls = self.__CLASSMAP__()
         if not hasattr(self, 'new'):
             self.new = _r6class_new(self, r6cls)
+        self.__R6CLASS__ = r6cls
 
 
 class R6StaticClassGenerator(R6ClassGenerator,
