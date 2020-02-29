@@ -138,7 +138,7 @@ class R6Meta(type):
         return cls
 
 
-def is_r6classgenerator(robj: rpy2.rinterface.Sexp): -> bool
+def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
     """Determine if an R objects is an R2ClassGenerator."""
     return (
         robj.typeof == rpy2.rinterface.RTYPES.ENVSXP
