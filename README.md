@@ -39,11 +39,11 @@ type(obj).__base__  # result: rpy2_R6.R6.R6
 # most common way to instanciate objects in python,
 # but it also possible to call the class object.
 
-Queue = type(obj)
+Queue = QueueClass.new
 myqueue = Queue()
 
 # or
 
-Queue = QueueClass.__R6CLASS__
+Queue = type(obj)
 myqueue = Queue()
 ```
