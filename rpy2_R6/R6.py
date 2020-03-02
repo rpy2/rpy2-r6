@@ -242,4 +242,3 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
     @__sexp__.setter
     def __sexp__(self, value):
         self.__ROBJECT__.__sexp__ = value
-    
