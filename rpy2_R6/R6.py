@@ -1,7 +1,9 @@
+import abc
 import rpy2.rinterface
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
+import textwrap
 import typing
 import warnings
 with warnings.catch_warnings():
@@ -20,7 +22,7 @@ R6_weakpack = WeakPackage(R6_pack._env,
                           R6_pack.__rname__,
                           translation=R6_pack._translation,
                           exported_names=R6_pack._exported_names,
-                          on_conflict="warn",
+                          on_conflict='warn',
                           version=R6_pack.__version__,
                           symbol_r2python=R6_pack._symbol_r2python,
                           symbol_resolve=R6_pack._symbol_resolve)
@@ -31,7 +33,7 @@ _CLASSMAP = dict()
 
 
 def _static_classmap(clsgenerator):
-    return _CLASSMAP.get(_classname(clsgenerator), R6)
+    return _CLASSMAP.get(clsgenerator.rid, R6)
 
 
 def dollar_getter(name: str) -> (
@@ -71,6 +73,20 @@ def _build_attr_dict(clsgenerator: 'R6ClassGenerator') -> (
     return res
 
 
+def _build_docstring(clsgenerator: 'R6ClassGenerator') -> str:
+    res = """Mapped R6 class "{classname}".
+
+    The class is created dynamically from the R6 class definition
+    in R.
+    """.format(classname=_classname(clsgenerator))
+    return textwrap.dedent(res)
+
+
+def _r6__init__(self, *args, **kwargs):
+    instance = dollar(self.__R6CLASSGENERATOR__, 'new')(*args, **kwargs)
+    self.__ROBJECT__ = instance
+
+
 def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     """Create a Python class matching R's R6ClassGenerator.
 
@@ -84,16 +100,20 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
         _classname(clsgenerator),
         (R6, ),
         {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator),
-         '__R6CLASSGENERATOR__': property(clsgenerator)}
+         # TODO: Can we have a class-level __sexp__ and make it implement
+         # the SupportSexp protocol ?
+         '__R6CLASSGENERATOR__': clsgenerator,
+         '__doc__': _build_docstring(clsgenerator),
+         '__init__': _r6__init__}
     )
     return cls
 
 
 def _dynamic_classmap(clsgenerator):
-    classname = _classname(clsgenerator)
-    if classname not in _CLASSMAP:
-        _CLASSMAP[classname] = r6_createcls(clsgenerator)
-    return _CLASSMAP[classname]
+    classid = clsgenerator.rid
+    if classid not in _CLASSMAP:
+        _CLASSMAP[classid] = r6_createcls(clsgenerator)
+    return _CLASSMAP[classid]
 
 
 def _r6class_new(clsgenerator, r6cls):
@@ -104,7 +124,7 @@ def _r6class_new(clsgenerator, r6cls):
     return inner
 
 
-class R6Meta(type):
+class R6Meta(abc.ABCMeta):
     """Metaclass for R6 obbjects.
 
     The metaclass is looking a class attribute __DEFAULT_ATTRS__, that
@@ -149,7 +169,13 @@ def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
 
 class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
-    """Factory of constructors for R6 objects."""
+    """Factory of constructors for R6 objects.
+
+    Each instance of this class has a staticmethod new() that is
+    effectively a constructor and can be called to create a new
+    instance of the corresponding R6 class.
+
+    The resulting object is of type defined by the method __CLASSMAP__."""
 
     __DEFAULT_ATTRS__ = {
         'active': None,
@@ -183,25 +209,37 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         super().__init__(o=robj)
 
         r6cls = self.__CLASSMAP__()
-        if not hasattr(self, 'new'):
-            self.new = _r6class_new(self, r6cls)
         self.__R6CLASS__ = r6cls
+        if not hasattr(self, 'new'):
+            self.new = r6cls
 
 
 class R6StaticClassGenerator(R6ClassGenerator,
                              metaclass=R6Meta):
+
     __CLASSMAP__ = _static_classmap
 
 
 class R6DynamicClassGenerator(R6ClassGenerator,
                               metaclass=R6Meta):
+
     __CLASSMAP__ = _dynamic_classmap
 
 
-class R6(rpy2.robjects.Environment,
+class R6(rpy2.rinterface.sexp.SupportsSEXP,
          metaclass=R6Meta):
 
     __DEFAULT_ATTRS__ = {}
+    __ROBJECT__ = None
 
     def __repr__(self):
         return '{} at {}'.format(repr(type(self)), hex(id(self)))
+
+    @property
+    def __sexp__(self):
+        return self.__ROBJECT__.__sexp__
+
+    @__sexp__.setter
+    def __sexp__(self, value):
+        self.__ROBJECT__.__sexp__ = value
+    
