@@ -1,5 +1,6 @@
 import abc
 import rpy2.rinterface
+import rpy2.rinterface_lib._rinterface_capi as _rinterface
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
@@ -29,10 +30,12 @@ R6_weakpack = WeakPackage(R6_pack._env,
 
 dollar = rpy2.robjects.baseenv['$']
 
+# This will map an `rid` (identifier for an R object of class
+# R6ClassGenerator) to a Python class inheriting from R6.
 _CLASSMAP = dict()
 
 
-def _static_classmap(clsgenerator):
+def _static_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type['R6']:
     return _CLASSMAP.get(clsgenerator.rid, R6)
 
 
@@ -87,7 +90,8 @@ def _r6__init__(self, *args, **kwargs):
     self.__ROBJECT__ = instance
 
 
-def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
+def r6_createcls(clsgenerator: 'R6ClassGenerator',
+                 bases: typing.Tuple[typing.Type['R6']]) -> typing.Type['R6']:
     """Create a Python class matching R's R6ClassGenerator.
 
     Args:
@@ -98,7 +102,7 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     """
     cls = R6Meta(
         _classname(clsgenerator),
-        (R6, ),
+        bases,
         {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator),
          # TODO: Can we have a class-level __sexp__ and make it implement
          # the SupportSexp protocol ?
@@ -109,14 +113,37 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator') -> 'typing.Type[R6]':
     return cls
 
 
-def _dynamic_classmap(clsgenerator):
-    classid = clsgenerator.rid
-    if classid not in _CLASSMAP:
-        _CLASSMAP[classid] = r6_createcls(clsgenerator)
-    return _CLASSMAP[classid]
+def _dynamic_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type:
+    lineage = [clsgenerator]
+    cur_clsgen = clsgenerator.inherit
+    while cur_clsgen is not rpy2.rinterface.NULL:
+        # cur_clsgen is a symbol for which we need to retrieve the mapped object
+        # TODO: may be there is an equivalent of `local()`, or of `eval()` using an
+        # environment or frame, at the C API level ?
+        cur_clsgen = rpy2.rinterface.baseenv['local'](
+            cur_clsgen,
+            dollar(lineage[-1], 'parent_env')
+        )
+        lineage.append(cur_clsgen)
+        if cur_clsgen.rid in _CLASSMAP:
+            break
+        cur_clsgen = dollar(cur_clsgen, 'inherit')
+
+    bases = [R6]
+    while lineage:
+        cur_clsgen = lineage.pop()
+        if not isinstance(cur_clsgen, R6ClassGenerator):
+            cur_clsgen = type(clsgenerator)(cur_clsgen)
+        bases.append(
+            r6_createcls(
+                cur_clsgen, tuple(reversed(bases)))
+        )
+        _CLASSMAP[cur_clsgen.rid] = bases[-1]
+    return _CLASSMAP[clsgenerator.rid]
 
 
-def _r6class_new(clsgenerator, r6cls):
+def _r6class_new(clsgenerator: 'R6ClassGenerator',
+                 r6cls: typing.Type['R6']) -> typing.Callable:
     """Wrapper for instance-specific static method."""
     def inner(*args, **kwargs):
         res = dollar(clsgenerator, 'new')(*args, **kwargs)
@@ -186,7 +213,7 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         'debug_names': property,
         'get_inherit': None,
         'has_private': property,
-        'inherit': None,
+        'inherit': property,
         'is_locked': property,
         'lock': None,
         'lock_class': property,
@@ -228,7 +255,14 @@ class R6DynamicClassGenerator(R6ClassGenerator,
 
 class R6(rpy2.rinterface.sexp.SupportsSEXP,
          metaclass=R6Meta):
+    """Base R6 class.
 
+    The underlying R object is an R environment at the base/C level.
+    However, we do not want to inherit all methods from
+    rpy2.robjects.Environment or even rpy2.rinterface.SexpEnvironment to
+    allow for class definitions with class attributes (methods and properties)
+    matching the R class definitions as closely as possible.
+    """
     __DEFAULT_ATTRS__ = {}
     __ROBJECT__ = None
 
@@ -236,9 +270,9 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
         return '{} at {}'.format(repr(type(self)), hex(id(self)))
 
     @property
-    def __sexp__(self):
+    def __sexp__(self) -> _rinterface.SexpCapsule:
         return self.__ROBJECT__.__sexp__
 
     @__sexp__.setter
-    def __sexp__(self, value):
+    def __sexp__(self, value: _rinterface.SexpCapsule):
         self.__ROBJECT__.__sexp__ = value

@@ -39,11 +39,42 @@ type(obj).__base__  # result: rpy2_R6.R6.R6
 # most common way to instanciate objects in python,
 # but it also possible to call the class object.
 
-Queue = QueueClass.new
+Queue = queue_factory.new
 myqueue = Queue()
 
 # or
 
 Queue = type(obj)
 myqueue = Queue()
+```
+
+The lineage (inheritance tree) for the Python class `Queue` dynamically
+generated matches the R6 one, up until the class R6.
+
+``` python
+>>> import inspect
+>>> inspect.getmro(Queue)  # result:
+(rpy2_R6.R6.Queue,
+ rpy2_R6.R6.R6,
+ rpy2.rinterface_lib.sexp.SupportsSEXP,
+ object)
+```
+
+An other example with a longer lineage:
+
+``` python
+HistoryQueue = (
+    r6.R6DynamicClassGenerator(
+        rpy2.robjects.r('HistoryQueue')
+    ).new
+)
+```
+
+```
+>>> inspect.getmro(HistoryQueue)
+(rpy2_R6.R6.HistoryQueue,
+ rpy2_R6.R6.Queue,
+ rpy2_R6.R6.R6,
+ rpy2.rinterface_lib.sexp.SupportsSEXP,
+ object)
 ```
