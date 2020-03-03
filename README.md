@@ -4,6 +4,8 @@
 Extension package for [`rpy2`](https://github.com/rpy2/rpy2) to faciliate
 the handling of R6 objects ([R6 is an OOP system for R](https://r6.r-lib.org/)).
 
+(an earlier proof-of-concept was in @matthewwardrop's PR on bitbucket - https://bitbucket.org/rpy2/rpy2/pull-requests/73 - and this is a proposed-yet-currently incomplete evolution of it)
+
 
 ```python
 import rpy2_R6.R6 as r6
