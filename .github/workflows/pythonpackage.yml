@@ -41,4 +41,4 @@ jobs:
       run: |
         export LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):${LD_LIBRARY_PATH}
         pip install pytest codecov pytest-cov
-        pytest rpy2_R6/tests*
+        pytest --cov rpy2_R6.R6 rpy2_R6/tests*
