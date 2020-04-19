@@ -78,7 +78,7 @@ instances of class `Range`:
 The lineage (inheritance tree) for the Python class `Range` is
 dynamically generated to match the R6 one, up until the class R6.
 
-.. code-block::python
+.. code-block:: python
    >>> import inspect
    >>> inspect.getmro(Range)
    (rpy2_R6.R6.Range,
