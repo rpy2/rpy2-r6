@@ -34,11 +34,13 @@ in the package `scales`, and we wrap it to be an instance
 of our matching Python class.
 
 .. code-block:: python
+
    range_factory = r6.R6DynamicClassGenerator(scales.Range)
 
 In R, creating a new instance of "Range" would be done with:
 
 .. code-block:: r
+
    obj <- Range$new()
 
 That instance `obj` could be og class `("Range", "R6")`, meaning
@@ -49,7 +51,7 @@ Our wrapper can function similarly:
 .. code-block:: python
 
    obj = range_factory.new()
-
+   
    # The python objects is of a class lineage matching.
    type(obj)  # result: rpy2_R6.R6.Rnage
    type(obj).__base__  # result: rpy2_R6.R6.R6
@@ -66,6 +68,7 @@ instance. This is a much more familiar way to create
 instances of class `Range`:
 
 .. code-block:: python
+
    Range = range_factory.new
    myrange = Range()
 
@@ -79,6 +82,7 @@ The lineage (inheritance tree) for the Python class `Range` is
 dynamically generated to match the R6 one, up until the class R6.
 
 .. code-block:: python
+
    >>> import inspect
    >>> inspect.getmro(Range)
    (rpy2_R6.R6.Range,
