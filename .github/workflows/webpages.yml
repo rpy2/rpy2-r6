@@ -56,8 +56,8 @@ jobs:
         path: gh-pages
     - name: Add HTML build
       run: |
-	   git rm -r --ignore-unmatch "${DOCPATH}"
-	   mv build_html "${DOCPATH}"
+           git rm -r --ignore-unmatch "${DOCPATH}"
+           mv build_html "${DOCPATH}"
            git add "${DOCPATH}"
            git commit -m "HTML Sphinx build for $(cat .revforbuild)"
            git push
