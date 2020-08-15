@@ -56,7 +56,7 @@ jobs:
         fetch-depth: 2
     - name: Add HTML build
       run: |
-           DOCPATH="doc/version/${GITHUB_REF##*/}/html"
+           DOCPATH="doc/_pages/version/${GITHUB_REF##*/}/html"
            git rm -r --ignore-unmatch "${DOCPATH}"
            mkdir -p "${DOCPATH}"
            mv -T build_html "${DOCPATH}"
