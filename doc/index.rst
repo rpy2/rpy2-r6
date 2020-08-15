@@ -3,7 +3,8 @@ R's R6 classes in rpy2/Python
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
+
 
 Introduction
 ------------
@@ -26,13 +27,13 @@ A first example
 To demonstrate how it is working, we use the R package
 `scales` (a dependency of `ggplot2`).
 
-.. code-block:: python
+.. testsetup:: *
 
    import rpy2_R6.R6 as r6
    import rpy2.rinterface
    import rpy2.robjects
    from rpy2.robjects.packages import importr
-   scales = importr('scales')
+   scales = importr('scales')   
 
 In R's R6, a class definition is an instance of class
 `ClassFactoryGenerator`, and its method `new()` is
@@ -42,23 +43,23 @@ metaclass, and its instances are like constructors
 for instance of the class of interest.
 
 This is relatively different from the way Python classes
-are defined and are working so we tried to have a wrapper
+are defined and are working, so we tried to have a wrapper
 that is both faithful to the R code, since this can make
 debugging or using the R documentation easier, while also
 allowing a rather Pythonic feel.
 
-To start, we start with `Range`, an instance of class
+In this short tutorial we start with `Range`, an instance of class
 `ClassFactoryGenerator` in the package `scales`, and we wrap
 it to be an instance of our matching Python class.
 
-.. code-block:: python
+.. testcode:: *
 
    range_factory = r6.R6DynamicClassGenerator(scales.Range)
 
 .. note::
 
-   The automatic wrapping can be done through rpy2's conversion
-   system. It is planned to offer the option is in this package.
+   Automatic wrapping could be achieved through rpy2's own conversion
+   system. It is planned to offer the option to facilitate this in this package.
 
 
 In R, creating a new instance of `Range` would be done with:
@@ -68,24 +69,24 @@ In R, creating a new instance of `Range` would be done with:
    library(scales)
    obj <- Range$new()
 
-That instance `obj` is of R class `("Range", "R6")`, meaning
-an instance of class "Range", inheriting from class "R6" (on the
+That instance `obj` is of R class `("Range", "R6")`, meaning that
+this is an instance of class "Range" inheriting from class "R6" (on the
 R side).
 
 .. code-block:: rconsole
 
-   >>> class(Range$new())
+   > class(Range$new())
    c("Range", "R6")
 
 We are able to write essentially the same code in Python:
 
-.. code-block:: python
+.. testcode:: *
 
    obj = range_factory.new()
 
 The type of the resulting object is a Python class `Range`:
 
-.. code-block:: python
+.. doctest::
 
    >>> type(obj)
    rpy2_R6.R6.Range
@@ -94,7 +95,7 @@ The type of the resulting object is a Python class `Range`:
 Dynamic class generation
 ------------------------
 
-We never explicitly defined that class `Range`. It
+One must note that we never explicitly defined the class `Range`; it
 was dynamically created by our package
 to reflect the R class definition from
 the `ClassFactoryGenerator` instance.
@@ -103,10 +104,10 @@ The use of a constructor method `new` is not the
 most common way to instanciate objects in python though,
 so we made our method `new` something a little unconventional:
 it is a nested class.
-This leads to a much more familiar way to create
-instances of class `Range`:
+Since the attribute is a class, it can be bound to a symbol for that
+class. For example:
 
-.. code-block:: python
+.. testcode:: *
 
    Range = range_factory.new
    myrange = Range()
@@ -115,7 +116,7 @@ The lineage (inheritance tree) for the Python class `Range` is
 dynamically generated to match the one for the R R6 class
 definition.
 
-.. code-block:: python
+.. doctest::
 
    >>> import inspect
    >>> inspect.getmro(Range)
@@ -126,7 +127,7 @@ definition.
 
 An other example with a longer lineage:
     
-.. code-block:: python
+.. doctest::
 
    >>> DiscreteRange = r6.R6DynamicClassGenerator(scales.DiscreteRange).new
    >>> inspect.getmro(DiscreteRange)
