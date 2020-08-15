@@ -34,9 +34,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install pandoc
         python -m pip install --upgrade pip
-        pip install -r doc/requirements.txt
         python setup.py install
         sudo Rscript scripts/install_r_packages.r scales R6
+        pip install -r doc/requirements.txt
     - name: Build HTML doc
       run: |
         export LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):${LD_LIBRARY_PATH}
