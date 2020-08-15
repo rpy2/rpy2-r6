@@ -4,7 +4,6 @@ on: [push]
 
 env:
   R-VERSION: "4.0"
-  DOCPATH: "doc/version/${GITHUB_REF##*/}/html"
 
 jobs:
   build:
@@ -56,6 +55,7 @@ jobs:
         path: gh-pages
     - name: Add HTML build
       run: |
+           DOCPATH="doc/version/${GITHUB_REF##*}/html"
            git rm -r --ignore-unmatch "${DOCPATH}"
            mv build_html "${DOCPATH}"
            git add "${DOCPATH}"
