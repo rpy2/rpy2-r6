@@ -48,7 +48,7 @@ jobs:
       run: |
            git config user.name github-actions
            git config user.email github-actions@github.com
-	   git rev-parse --short HEAD > .revforbuild
+           git rev-parse --short HEAD > .revforbuild
 	   mv _build/html build_html
     - name: Checkout gh-pages
       uses: actions/checkout@v2
