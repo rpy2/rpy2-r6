@@ -76,4 +76,3 @@ jobs:
           git add "${DOCPATH}"
           git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\"/.revforbuild)"
           git push
- 
