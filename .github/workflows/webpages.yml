@@ -52,12 +52,13 @@ jobs:
     - name: Checkout gh-pages
       uses: actions/checkout@v2
       with:
-        path: gh-pages
+        ref: gh-pages
+        fetch-depth: 2
     - name: Add HTML build
       run: |
            DOCPATH="doc/version/${GITHUB_REF##*/}/html"
            git rm -r --ignore-unmatch "${DOCPATH}"
-	   mkdir -p "${DOCPATH}"
+           mkdir -p "${DOCPATH}"
            mv -T build_html "${DOCPATH}"
            git add "${DOCPATH}"
            git commit -m "HTML Sphinx build for $(cat .revforbuild)"
