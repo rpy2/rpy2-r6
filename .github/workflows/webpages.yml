@@ -71,7 +71,7 @@ jobs:
           DOCPATH="doc/_pages/version/${GITHUB_REF##*/}/html"
           git rm -r --ignore-unmatch "${DOCPATH}"
           mkdir -p "${DOCPATH}"
-	  ls
+          ls
           mv -T html-doc "${DOCPATH}"
           git add "${DOCPATH}"
           git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\".revforbuild)"
