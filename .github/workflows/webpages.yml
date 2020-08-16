@@ -59,7 +59,7 @@ jobs:
           ref: gh-pages
           fetch-depth: 2
       - name: download HTML build
-        uses: actions/upload-artifact@v2
+        uses: actions/download-artifact@v2
         with:
           name: html-doc
       - name: Prepare git for commit
