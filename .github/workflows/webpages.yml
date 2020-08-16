@@ -6,7 +6,8 @@ env:
   R-VERSION: "4.0"
 
 jobs:
-  sphinx_html:
+  job_1:
+    name: sphinx_html
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -47,10 +48,11 @@ jobs:
         with:
           name: html-doc
           path: doc/_build/html
-    commit_ghpages:
-      runs-on: ubuntu-latest
-      needs: sphinx_html
-      steps:
+  job_2:
+    name: commit_ghpages:
+    runs-on: ubuntu-latest
+    needs: sphinx_html
+    steps:
       - name: Checkout gh-pages
         uses: actions/checkout@v2
         with:
@@ -73,3 +75,4 @@ jobs:
           git add "${DOCPATH}"
           git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\".revforbuild)"
           git push
+ 
