@@ -49,7 +49,7 @@ jobs:
           name: html-doc
           path: doc/_build/html
   job_2:
-    name: commit_ghpages:
+    name: commit_ghpages
     runs-on: ubuntu-latest
     needs: sphinx_html
     steps:
