@@ -74,6 +74,6 @@ jobs:
           mkdir -p "${DOCPATH}"
           mv -T html-doc "${DOCPATH}"
           git add "${DOCPATH}"
-          git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\".revforbuild)"
+          git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\"/.revforbuild)"
           git push
  
