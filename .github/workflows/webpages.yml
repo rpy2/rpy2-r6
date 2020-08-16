@@ -1,6 +1,9 @@
 name: Pages
 
-on: [push]
+on:
+  push:
+    branches:    
+      - '!gh-pages'
 
 env:
   R-VERSION: "4.0"
