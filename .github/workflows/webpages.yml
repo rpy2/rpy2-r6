@@ -41,7 +41,7 @@ jobs:
           python -m rpy2.situation
           cd doc
           make html
-	  git rev-parse --short HEAD > _build/html/.revforbuild
+          git rev-parse --short HEAD > _build/html/.revforbuild
       - name: Archive documentation
         uses: actions/upload-artifact@v2
         with:
@@ -71,5 +71,5 @@ jobs:
           mkdir -p "${DOCPATH}"
           mv -T html-doc "${DOCPATH}"
           git add "${DOCPATH}"
-          git commit -m "HTML Sphinx build for $(cat .revforbuild)"
+          git commit -m "HTML Sphinx build for $(cat \"${DOCPATH}\".revforbuild)"
           git push
