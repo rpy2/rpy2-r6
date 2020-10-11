@@ -81,5 +81,9 @@ jobs:
           mv -T html-doc "${DOCPATH}"
           echo "Adding docpath to local repos"
           git add "${DOCPATH}"
-          git commit -m "HTML Sphinx build for $(cat .revforbuild)"
-          git push
+          if [ -z $(git status -uno --porcelain) ]; then
+            echo "No changes to be committed."  
+          else
+            git commit -m "HTML Sphinx build for $(cat .revforbuild)" "${DOCPATH}";
+            git push;
+          fi
