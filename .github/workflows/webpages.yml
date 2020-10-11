@@ -73,11 +73,13 @@ jobs:
       - name: Add HTML build
         run: |
           DOCPATH="docs/version/${GITHUB_REF##*/}/html"
+          echo "Doc path: ${DOCPATH}"
           git rm -r --ignore-unmatch "${DOCPATH}"
+          echo "Creating docpath."
           mkdir -p "${DOCPATH}"
           mv html-doc/.revforbuild .
           mv -T html-doc "${DOCPATH}"
+          echo "Adding docpath to local repos"
           git add "${DOCPATH}"
           git commit -m "HTML Sphinx build for $(cat .revforbuild)"
           git push
- 
