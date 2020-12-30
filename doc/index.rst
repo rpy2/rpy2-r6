@@ -27,7 +27,7 @@ A first example
 To demonstrate how it is working, we use the R package
 `scales` (a dependency of `ggplot2`).
 
-.. testsetup:: *
+.. doctest:: first_example
 
    import rpy2_R6.R6 as r6
    import rpy2.rinterface
@@ -52,7 +52,7 @@ In this short tutorial we start with `Range`, an instance of class
 `ClassFactoryGenerator` in the package `scales`, and we wrap
 it to be an instance of our matching Python class.
 
-.. testcode:: *
+.. testcode:: first_example
 
    range_factory = r6.R6DynamicClassGenerator(scales.Range)
 
@@ -80,7 +80,7 @@ R side).
 
 We are able to write essentially the same code in Python:
 
-.. testcode:: *
+.. testcode:: first_example
 
    obj = range_factory.new()
 
@@ -107,7 +107,7 @@ it is a nested class.
 Since the attribute is a class, it can be bound to a symbol for that
 class. For example:
 
-.. testcode:: *
+.. testcode:: first_example
 
    Range = range_factory.new
    myrange = Range()
@@ -116,7 +116,7 @@ The lineage (inheritance tree) for the Python class `Range` is
 dynamically generated to match the one for the R R6 class
 definition.
 
-.. doctest::
+.. doctest:: first_example
 
    >>> import inspect
    >>> inspect.getmro(Range)
@@ -127,7 +127,7 @@ definition.
 
 An other example with a longer lineage:
     
-.. doctest::
+.. doctest:: first_example
 
    >>> DiscreteRange = r6.R6DynamicClassGenerator(scales.DiscreteRange).new
    >>> inspect.getmro(DiscreteRange)

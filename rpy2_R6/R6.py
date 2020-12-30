@@ -42,10 +42,11 @@ def _static_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type['R6']:
 def dollar_getter(name: str) -> (
         typing.Callable[[rpy2.rinterface.SexpEnvironment], rpy2.rinterface.Sexp]
 ):
-    """Convenience partial function for the R `$`.
+    """Convenience partial function for R's `$`.
 
     The R function `$` fetches attributes and is often
-    found in R code under the form `object$name`.
+    found in R code. For example, `object$name` to
+    get the attribute "name" of object "object".
 
     Args:
       name (str): the name of the R attribute to fetch
@@ -86,7 +87,8 @@ def _build_docstring(clsgenerator: 'R6ClassGenerator') -> str:
 
 
 def _r6__init__(self, *args, **kwargs):
-    instance = dollar(self.__R6CLASSGENERATOR__, 'new')(*args, **kwargs)
+    r6classgen = self.__R6CLASSGENERATOR__
+    instance = dollar(r6classgen, r6classgen._FACTORY_NAME)(*args, **kwargs)
     self.__ROBJECT__ = instance
 
 
@@ -113,13 +115,15 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator',
     return cls
 
 
-def _dynamic_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type:
+def _dynamic_classmap(clsgenerator: 'R6ClassGenerator',
+                      bases: typing.Optional[typing.Tuple[typing.Type]] = None) -> typing.Type:
     lineage = [clsgenerator]
     cur_clsgen = clsgenerator.inherit
     while cur_clsgen is not rpy2.rinterface.NULL:
-        # cur_clsgen is a symbol for which we need to retrieve the mapped object
-        # TODO: may be there is an equivalent of `local()`, or of `eval()` using an
-        # environment or frame, at the C API level ?
+        # cur_clsgen is a symbol for which we need to retrieve the mapped
+        # object
+        # TODO: may be there is an equivalent of `local()`, or of `eval()`
+        # using an environment or frame, at the C API level ?
         cur_clsgen = rpy2.rinterface.baseenv['local'](
             cur_clsgen,
             dollar(lineage[-1], 'parent_env')
@@ -129,24 +133,28 @@ def _dynamic_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type:
             break
         cur_clsgen = dollar(cur_clsgen, 'inherit')
 
-    bases = [R6]
+    if bases is None:
+        bases = (R6, )
+    bases = list(bases)
     while lineage:
         cur_clsgen = lineage.pop()
         if not isinstance(cur_clsgen, R6ClassGenerator):
             cur_clsgen = type(clsgenerator)(cur_clsgen)
         bases.append(
             r6_createcls(
-                cur_clsgen, tuple(reversed(bases)))
+                cur_clsgen, tuple(reversed(bases))
+            )
         )
         _CLASSMAP[cur_clsgen.rid] = bases[-1]
     return _CLASSMAP[clsgenerator.rid]
 
 
-def _r6class_new(clsgenerator: 'R6ClassGenerator',
-                 r6cls: typing.Type['R6']) -> typing.Callable:
+def _r6class_method_wrap(clsgenerator: 'R6ClassGenerator',
+                         r6cls: typing.Type['R6'],
+                         name: str = 'new') -> typing.Callable:
     """Wrapper for instance-specific static method."""
     def inner(*args, **kwargs):
-        res = dollar(clsgenerator, 'new')(*args, **kwargs)
+        res = dollar(clsgenerator, name)(*args, **kwargs)
         return r6cls(res)
     return inner
 
@@ -154,11 +162,10 @@ def _r6class_new(clsgenerator: 'R6ClassGenerator',
 class R6Meta(abc.ABCMeta):
     """Metaclass for R6 obbjects.
 
-    The metaclass is looking a class attribute __DEFAULT_ATTRS__, that
-    is a dict[str, None|property]. The str key is the name of an attribute
-    for the R6 object in R for which, in the absence of an attribute of the
-    same name in the class definition, the R object will be dynamically
-    mapped to a Python attribute of the same name at class definition."""
+    This metaclass looks for an attribute __DEFAULT_ATTRS__ (a dict[str, None|property]).
+    Each key in (a str) in that dict is the name of an attribute in the R6 object and
+    automatically generates an attribute in the Python concrete class (unless the class
+    definition already has an attribute with that name."""
 
     def __new__(meta, name, bases, attrs, **kwds):
         default_attrs = attrs.get('__DEFAULT_ATTRS__', None)
@@ -186,7 +193,7 @@ class R6Meta(abc.ABCMeta):
 
 
 def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
-    """Determine if an R objects is an R2ClassGenerator."""
+    """Determine if an R objects is an R6ClassGenerator."""
     return (
         robj.typeof == rpy2.rinterface.RTYPES.ENVSXP
         and
@@ -198,7 +205,8 @@ class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
     """Factory of constructors for R6 objects.
 
-    Each instance of this class has a staticmethod new() that is
+    Each instance of this class has a staticmethod new()
+    (or an alternative name specified through factory_name) that is
     effectively a constructor and can be called to create a new
     instance of the corresponding R6 class.
 
@@ -230,15 +238,16 @@ class R6ClassGenerator(rpy2.robjects.Environment,
         'undebug': None,
         'unlock': None
     }
+    _FACTORY_NAME = 'new'
 
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
-        # TODO: check that robj is genuinely an R R6ClassGenerator
+        assert is_r6classgenerator(robj)
         super().__init__(o=robj)
 
         r6cls = self.__CLASSMAP__()
         self.__R6CLASS__ = r6cls
-        if not hasattr(self, 'new'):
-            self.new = r6cls
+        if not hasattr(self, self._FACTORY_NAME):
+            setattr(self, self._FACTORY_NAME, r6cls)
 
 
 class R6StaticClassGenerator(R6ClassGenerator,
