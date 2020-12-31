@@ -8,7 +8,7 @@ if __name__ == '__main__':
         version=pack_version,
         description='Mapping the R package R6',
         license='MIT',
-        requires=['rpy2'],
+        requires=['rpy2(>=3.4)'],
         packages=['rpy2_R6'],
         classifiers=['Programming Language :: Python',
                      'Programming Language :: Python :: 3',

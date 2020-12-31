@@ -48,7 +48,7 @@ def test_R6DynamicClassWrapper(rcode, classhierarchy, attributes):
     clsgen = r6.R6DynamicClassGenerator(
         ro.r(rcode)
     )
-    assert (tuple(cls.__name__ for cls in inspect.getmro(clsgen.new))[:-2]
+    assert (tuple(cls.__name__ for cls in inspect.getmro(clsgen.__R6CLASS__))[:-2]
             ==
             classhierarchy)
     r6instance = clsgen.new()

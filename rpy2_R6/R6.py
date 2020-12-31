@@ -1,6 +1,6 @@
 import abc
 import rpy2.rinterface
-import rpy2.rinterface_lib._rinterface_capi as _rinterface
+from rpy2.rinterface_lib import _rinterface_capi
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
@@ -11,7 +11,7 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     R6_pack = importr('R6', on_conflict='warn')
 
-TARGET_VERSION = '2.4.'
+TARGET_VERSION = '2.5.'
 
 if not R6_pack.__version__.startswith(TARGET_VERSION):
     warnings.warn(
@@ -39,7 +39,7 @@ def _static_classmap(clsgenerator: 'R6ClassGenerator') -> typing.Type['R6']:
     return _CLASSMAP.get(clsgenerator.rid, R6)
 
 
-def dollar_getter(name: str) -> (
+def r6_method(name: str) -> (
         typing.Callable[[rpy2.rinterface.SexpEnvironment], rpy2.rinterface.Sexp]
 ):
     """Convenience partial function for R's `$`.
@@ -53,12 +53,27 @@ def dollar_getter(name: str) -> (
     Returns:
       The R object associated with the attribute.
     """
-    def inner(obj):
-        return dollar(obj, name)
+    # TODO: prefetch the dispatched `$` to improve performances?
+    def inner(self):
+        return dollar(self, name)
     return inner
 
 
-def _classname(obj):
+def r6_property(name: str):
+    def inner(self):
+        return dollar(self, name)
+    return property(inner)
+
+
+def r6_factorymethod(name: str):
+    def inner(self, *args, **kwargs):
+        instance = dollar(self, name)(*args, **kwargs)
+        return self.__R6CLASS__(instance)
+    return inner
+
+
+def classname(obj: _rinterface_capi.SupportsSEXP) -> str:
+    """Name of the R class."""
     res = dollar(obj, 'classname')
     if res is not rpy2.robjects.NULL:
         assert len(res) == 1
@@ -71,9 +86,9 @@ def _build_attr_dict(clsgenerator: 'R6ClassGenerator') -> (
 ):
     res = dict()
     if clsgenerator.public_methods.names != rpy2.robjects.NULL:
-        res.update((x, None) for x in clsgenerator.public_methods.names)
+        res.update((x, r6_method) for x in clsgenerator.public_methods.names)
     if clsgenerator.public_fields.names != rpy2.robjects.NULL:
-        res.update((x, property) for x in clsgenerator.public_fields.names)
+        res.update((x, r6_property) for x in clsgenerator.public_fields.names)
     return res
 
 
@@ -82,35 +97,38 @@ def _build_docstring(clsgenerator: 'R6ClassGenerator') -> str:
 
     The class is created dynamically from the R6 class definition
     in R.
-    """.format(classname=_classname(clsgenerator))
+    """.format(classname=classname(clsgenerator))
     return textwrap.dedent(res)
-
-
-def _r6__init__(self, *args, **kwargs):
-    r6classgen = self.__R6CLASSGENERATOR__
-    instance = dollar(r6classgen, r6classgen._FACTORY_NAME)(*args, **kwargs)
-    self.__ROBJECT__ = instance
 
 
 def r6_createcls(clsgenerator: 'R6ClassGenerator',
                  bases: typing.Tuple[typing.Type['R6']]) -> typing.Type['R6']:
-    """Create a Python class matching R's R6ClassGenerator.
+    """Create a Python class matching the description in a R6ClassGenerator.
 
+    The R6 OOP system differs from a traditional class representation in Python
+    in the sense it that user calls constructors that are attributes of instances
+    of class R6ClassGenerator, and get instances of the corresponding class in
+    return.
+
+    This function dynamically creates a Python class from an R6ClassGenerator,
+    adding Python methods and attributes found it its description.
+  
     Args:
       clsgenerator (R6ClassGenerator): an instance of class R6ClassGenerator
+      bases: a tuple of base classes to use for the Python class. Not any class
+        can be used as a base. Inheriting from the default R6 is recommended. 
 
     Returns:
       A Python class
     """
     cls = R6Meta(
-        _classname(clsgenerator),
+        classname(clsgenerator),
         bases,
         {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator),
          # TODO: Can we have a class-level __sexp__ and make it implement
          # the SupportSexp protocol ?
          '__R6CLASSGENERATOR__': clsgenerator,
-         '__doc__': _build_docstring(clsgenerator),
-         '__init__': _r6__init__}
+         '__doc__': _build_docstring(clsgenerator)}
     )
     return cls
 
@@ -152,7 +170,7 @@ def _dynamic_classmap(clsgenerator: 'R6ClassGenerator',
 def _r6class_method_wrap(clsgenerator: 'R6ClassGenerator',
                          r6cls: typing.Type['R6'],
                          name: str = 'new') -> typing.Callable:
-    """Wrapper for instance-specific static method."""
+    """Wrapper for instance-specific static methods."""
     def inner(*args, **kwargs):
         res = dollar(clsgenerator, name)(*args, **kwargs)
         return r6cls(res)
@@ -184,10 +202,8 @@ class R6Meta(abc.ABCMeta):
         for key in (attr_names
                     .difference(attrs.keys())):
             wrapper = default_attrs[key]
-            if wrapper:
-                attrs[key] = wrapper(dollar_getter(key))
-            else:
-                attrs[key] = dollar_getter(key)
+            attrs[key] = wrapper(key)
+
         cls = type.__new__(meta, name, bases, attrs, **kwds)
         return cls
 
@@ -213,41 +229,36 @@ class R6ClassGenerator(rpy2.robjects.Environment,
     The resulting object is of type defined by the method __CLASSMAP__."""
 
     __DEFAULT_ATTRS__ = {
-        'active': None,
-        'class': property,
-        'classname': property,
-        'clone_method': None,
-        'debug': None,
-        'debug_names': property,
-        'get_inherit': None,
-        'has_private': property,
-        'inherit': property,
-        'is_locked': property,
-        'lock': None,
-        'lock_class': property,
-        'lock_objects': property,
-        # 'new' has a special treatment. see __init__.
-        'parent_env': property,
-        'portable': property,
-        'private_fields': property,
-        'private_methods': property,
-        'public_fields': property,
-        'public_methods': property,
-        'self': property,
-        'set': None,
-        'undebug': None,
-        'unlock': None
+        'active': r6_method,
+        'class': r6_property,
+        'classname': r6_property,
+        'clone_method': r6_method,
+        'debug': r6_method,
+        'debug_names': r6_property,
+        'get_inherit': r6_method,
+        'has_private': r6_property,
+        'inherit': r6_property,
+        'is_locked': r6_property,
+        'lock': r6_method,
+        'lock_class': r6_property,
+        'lock_objects': r6_property,
+        'new': r6_factorymethod,
+        'parent_env': r6_property,
+        'portable': r6_property,
+        'private_fields': r6_property,
+        'private_methods': r6_property,
+        'public_fields': r6_property,
+        'public_methods': r6_property,
+        'self': r6_property,
+        'set': r6_method,
+        'undebug': r6_method,
+        'unlock': r6_method
     }
-    _FACTORY_NAME = 'new'
 
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         assert is_r6classgenerator(robj)
         super().__init__(o=robj)
-
-        r6cls = self.__CLASSMAP__()
-        self.__R6CLASS__ = r6cls
-        if not hasattr(self, self._FACTORY_NAME):
-            setattr(self, self._FACTORY_NAME, r6cls)
+        self.__R6CLASS__ = self.__CLASSMAP__()
 
 
 class R6StaticClassGenerator(R6ClassGenerator,
@@ -275,13 +286,21 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
     __DEFAULT_ATTRS__ = {}
     __ROBJECT__ = None
 
+    def __init__(self, obj):
+        self.__ROBJECT__ == obj
+
     def __repr__(self):
         return '{} at {}'.format(repr(type(self)), hex(id(self)))
 
     @property
-    def __sexp__(self) -> _rinterface.SexpCapsule:
+    def __sexp__(self) -> _rinterface_capi.SexpCapsule:
         return self.__ROBJECT__.__sexp__
 
     @__sexp__.setter
-    def __sexp__(self, value: _rinterface.SexpCapsule):
+    def __sexp__(self, value: _rinterface_capi.SexpCapsule):
         self.__ROBJECT__.__sexp__ = value
+
+
+def to_environment(obj: R6):
+    """R6 object as an environment."""
+    return robjects.Environment(obj.__ROBJECT__)

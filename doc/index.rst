@@ -38,9 +38,9 @@ To demonstrate how it is working, we use the R package
 In R's R6, a class definition is an instance of class
 `ClassFactoryGenerator`, and its method `new()` is
 is used to create instances of class `R6`. In a way,
-the class `ClassFactorGenerator` is in fact closer to a
-metaclass, and its instances are like constructors
-for instance of the class of interest.
+the class `ClassFactorGenerator` is closer to a
+metaclass and its instances are factories that can
+create instances of the class of interest.
 
 This is relatively different from the way Python classes
 are defined and are working, so we tried to have a wrapper
@@ -100,21 +100,21 @@ was dynamically created by our package
 to reflect the R class definition from
 the `ClassFactoryGenerator` instance.
 
-The use of a constructor method `new` is not the
-most common way to instanciate objects in python though,
-so we made our method `new` something a little unconventional:
-it is a nested class.
-Since the attribute is a class, it can be bound to a symbol for that
-class. For example:
+The method `new` is a factory:
 
 .. testcode:: first_example
 
-   Range = range_factory.new
-   myrange = Range()
+   myrange = range_factory.new
 
+The underlying class is:
+
+.. testcode:: first_example
+
+   Range = range_factory.__R6CLASS__
+   
 The lineage (inheritance tree) for the Python class `Range` is
-dynamically generated to match the one for the R R6 class
-definition.
+dynamically generated to match the one for the R6 class
+definition in R.
 
 .. doctest:: first_example
 
