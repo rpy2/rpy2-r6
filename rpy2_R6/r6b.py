@@ -4,6 +4,7 @@ from rpy2.rinterface_lib import _rinterface_capi
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
+import rpy2_R6.utils
 import textwrap
 import typing
 import warnings
@@ -67,8 +68,10 @@ def r6_property(name: str):
 
 def r6_factorymethod(name: str):
     def inner(self, *args, **kwargs):
-        instance = dollar(self, name)(*args, **kwargs)
-        return self.__R6CLASS__(instance)
+        robj = dollar(self, name)(*args, **kwargs)
+        instance = self.__R6CLASS__(robj)
+        instance.__ROBJECT__ = robj
+        return instance
     return inner
 
 
@@ -125,8 +128,6 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator',
         classname(clsgenerator),
         bases,
         {'__DEFAULT_ATTRS__': _build_attr_dict(clsgenerator),
-         # TODO: Can we have a class-level __sexp__ and make it implement
-         # the SupportSexp protocol ?
          '__R6CLASSGENERATOR__': clsgenerator,
          '__doc__': _build_docstring(clsgenerator)}
     )
@@ -180,18 +181,22 @@ def _r6class_method_wrap(clsgenerator: 'R6ClassGenerator',
 class R6Meta(abc.ABCMeta):
     """Metaclass for R6 obbjects.
 
-    This metaclass looks for an attribute __DEFAULT_ATTRS__ (a dict[str, None|property]).
-    Each key in (a str) in that dict is the name of an attribute in the R6 object and
-    automatically generates an attribute in the Python concrete class (unless the class
-    definition already has an attribute with that name."""
+    This metaclass looks for an optional attribute __DEFAULT_ATTRS__ in the class
+    definition that is a dict[str, callable].
+    Each key in in that dict is a str, the name of an attribute in the R6 object, and
+    is used to automatically creates an attribute or method in the Python concrete class...
+    unless the class definition already has an attribute or method with that name."""
 
     def __new__(meta, name, bases, attrs, **kwds):
+        
         default_attrs = attrs.get('__DEFAULT_ATTRS__', None)
+        # If __DEFAULT_ATTRS__ is missing, look for it in parent classes.
         if default_attrs is None:
             for b in bases:
                 if hasattr(b, '__DEFAULT_ATTRS__'):
                     default_attrs = b.__DEFAULT_ATTRS__
                     break
+        # If still no
         if default_attrs is None:
             raise ValueError(
                 'Classes using the type {} must have an '
@@ -216,6 +221,11 @@ def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
         tuple(robj.rclass) == ('R6ClassGenerator',)
     )
 
+_attr_func_map = {
+    rpy2_R6.utils.ATTR_TYPE.METHOD: r6_method,
+    rpy2_R6.utils.ATTR_TYPE.FACTORYMETHOD: r6_factorymethod,
+    rpy2_R6.utils.ATTR_TYPE.PROPERTY: r6_property,
+}
 
 class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
@@ -228,32 +238,10 @@ class R6ClassGenerator(rpy2.robjects.Environment,
 
     The resulting object is of type defined by the method __CLASSMAP__."""
 
-    __DEFAULT_ATTRS__ = {
-        'active': r6_method,
-        'class': r6_property,
-        'classname': r6_property,
-        'clone_method': r6_method,
-        'debug': r6_method,
-        'debug_names': r6_property,
-        'get_inherit': r6_method,
-        'has_private': r6_property,
-        'inherit': r6_property,
-        'is_locked': r6_property,
-        'lock': r6_method,
-        'lock_class': r6_property,
-        'lock_objects': r6_property,
-        'new': r6_factorymethod,
-        'parent_env': r6_property,
-        'portable': r6_property,
-        'private_fields': r6_property,
-        'private_methods': r6_property,
-        'public_fields': r6_property,
-        'public_methods': r6_property,
-        'self': r6_property,
-        'set': r6_method,
-        'undebug': r6_method,
-        'unlock': r6_method
-    }
+    __DEFAULT_ATTRS__ = dict(
+        (key, _attr_func_map[value])
+        for key, value in rpy2_R6.utils.__DEFAULT_GENERATOR_ATTRS__.items()
+    )
 
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):
         assert is_r6classgenerator(robj)
@@ -288,6 +276,7 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
 
     def __init__(self, obj):
         self.__ROBJECT__ == obj
+        x = 1
 
     def __repr__(self):
         return '{} at {}'.format(repr(type(self)), hex(id(self)))

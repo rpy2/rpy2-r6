@@ -1,7 +1,8 @@
 import pytest
 
 import inspect
-import rpy2_R6.R6 as r6
+import rpy2_R6.r6a as r6a
+import rpy2_R6.r6b as r6b
 import rpy2.rinterface as ri
 import rpy2.robjects as ro
 
@@ -13,6 +14,21 @@ def _list_names(obj):
         return tuple(obj.names)
 
 
+def _test_attributes_r6a(obj, pub_method_names, pub_field_names):
+    assert all(x in _list_names(obj._public_fields) for x in pub_field_names)
+
+
+def _test_attributes_r6b(obj, pub_method_names, pub_field_names):
+    assert all(x in _list_names(obj.public_methods) for x in pub_method_names)
+    assert all(x in _list_names(obj.public_fields) for x in pub_field_names)
+
+
+@pytest.mark.parametrize(
+    'constructor,classname_getter, test_attributes',
+    ((r6a.R6Class, lambda x: x.class_name, _test_attributes_r6a),
+     (r6a.R6Class.from_robj, lambda x: x.class_name, _test_attributes_r6a),
+     (r6b.R6StaticClassGenerator, lambda x: x.classname[0], _test_attributes_r6b))
+)
 @pytest.mark.parametrize(
     'callparams,pub_method_names,pub_field_names',
     (
@@ -21,15 +37,15 @@ def _list_names(obj):
     )
 )
 def test_R6StaticClassWrapper(
+        constructor, classname_getter, test_attributes,
         callparams, pub_method_names, pub_field_names):
     # Without custom conversion, R6ClassGenerator objects
     # are just environments.
     env = ro.r('R6Class("foo", {})'.format(callparams))
     assert isinstance(env, ri.SexpEnvironment)
-    clsi = r6.R6StaticClassGenerator(env)
-    assert clsi.classname[0] == 'foo'
-    assert all(x in _list_names(clsi.public_methods) for x in pub_method_names)
-    assert all(x in _list_names(clsi.public_fields) for x in pub_field_names)
+    clsi = constructor(env)
+    assert classname_getter(clsi) == 'foo'
+    test_attributes(clsi, pub_method_names, pub_field_names)
 
 
 @pytest.mark.parametrize(
@@ -45,7 +61,7 @@ def test_R6StaticClassWrapper(
     )
 )
 def test_R6DynamicClassWrapper(rcode, classhierarchy, attributes):
-    clsgen = r6.R6DynamicClassGenerator(
+    clsgen = r6b.R6DynamicClassGenerator(
         ro.r(rcode)
     )
     assert (tuple(cls.__name__ for cls in inspect.getmro(clsgen.__R6CLASS__))[:-2]
@@ -53,8 +69,9 @@ def test_R6DynamicClassWrapper(rcode, classhierarchy, attributes):
             classhierarchy)
     r6instance = clsgen.new()
     assert all(hasattr(r6instance, a) for a in attributes)
+    assert hasattr(r6instance, '__sexp__')
 
 
 def test_isr6classgenerator():
     clsi = ro.r('R6Class("Foo", public = list(x = function(x) { x * 2 }))')
-    assert r6.is_r6classgenerator(clsi)
+    assert r6b.is_r6classgenerator(clsi)
