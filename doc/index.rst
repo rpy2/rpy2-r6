@@ -1,6 +1,8 @@
 R's R6 classes in rpy2/Python
 =============================
 
+Repository: https://github.com/rpy2/rpy2-R6
+
 .. contents:: Table of Contents
 
 
