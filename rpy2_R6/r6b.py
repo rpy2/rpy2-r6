@@ -115,11 +115,11 @@ def r6_createcls(clsgenerator: 'R6ClassGenerator',
 
     This function dynamically creates a Python class from an R6ClassGenerator,
     adding Python methods and attributes found it its description.
-  
+
     Args:
       clsgenerator (R6ClassGenerator): an instance of class R6ClassGenerator
       bases: a tuple of base classes to use for the Python class. Not any class
-        can be used as a base. Inheriting from the default R6 is recommended. 
+        can be used as a base. Inheriting from the default R6 is recommended.
 
     Returns:
       A Python class
@@ -188,7 +188,7 @@ class R6Meta(abc.ABCMeta):
     unless the class definition already has an attribute or method with that name."""
 
     def __new__(meta, name, bases, attrs, **kwds):
-        
+
         default_attrs = attrs.get('__DEFAULT_ATTRS__', None)
         # If __DEFAULT_ATTRS__ is missing, look for it in parent classes.
         if default_attrs is None:
@@ -221,11 +221,13 @@ def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
         tuple(robj.rclass) == ('R6ClassGenerator',)
     )
 
+
 _attr_func_map = {
     rpy2_R6.utils.ATTR_TYPE.METHOD: r6_method,
     rpy2_R6.utils.ATTR_TYPE.FACTORYMETHOD: r6_factorymethod,
     rpy2_R6.utils.ATTR_TYPE.PROPERTY: r6_property,
 }
+
 
 class R6ClassGenerator(rpy2.robjects.Environment,
                        metaclass=R6Meta):
@@ -276,7 +278,6 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
 
     def __init__(self, obj):
         self.__ROBJECT__ == obj
-        x = 1
 
     def __repr__(self):
         return '{} at {}'.format(repr(type(self)), hex(id(self)))
@@ -292,4 +293,4 @@ class R6(rpy2.rinterface.sexp.SupportsSEXP,
 
 def to_environment(obj: R6):
     """R6 object as an environment."""
-    return robjects.Environment(obj.__ROBJECT__)
+    return rpy2.robjects.Environment(obj.__ROBJECT__)

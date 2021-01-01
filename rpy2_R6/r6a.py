@@ -1,7 +1,6 @@
-import inspect
+import types
 import weakref
 
-import numpy as np
 import rpy2.rinterface_lib as rinterface_lib
 import rpy2.rinterface_lib._rinterface_capi as _rinterface_capi
 import rpy2.robjects as robjects
@@ -46,7 +45,7 @@ class R6Object(_rinterface_capi.SupportsSEXP):
 
     def __getattr__(self, attr):
         if attr.startswith('_') and attr[1:] in self.__PRIVATE_ATTRS__:
-                value = self._robj[attr[1:]]
+            value = self._robj[attr[1:]]
         elif not attr.startswith('_') and attr not in self.__PRIVATE_ATTRS__:
             value = self._robj[attr]
         else:
@@ -57,7 +56,10 @@ class R6Object(_rinterface_capi.SupportsSEXP):
                 and
                 set(value.rclass) == {'function'}
         ):
-            return wrap_r_function(value, name=attr, method_of=self)
+            return types.MethodType(
+                robjects.functions.wrap_r_function(value, name=attr, is_method=True),
+                self
+            )
         return value
 
     def __eq__(self, other):
