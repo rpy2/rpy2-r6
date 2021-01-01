@@ -19,5 +19,5 @@ if __name__ == '__main__':
                       'MIT'),
                      'Intended Audience :: Developers',
                      'Intended Audience :: Science/Research',
-                     'Development Status :: 5 - Production/Stable']
+                     'Development Status :: 3 - Alpha']
     )
