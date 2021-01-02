@@ -6,13 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>R’s R6 classes in rpy2/Python &#8212; rpy2-R6 0.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -32,11 +31,28 @@
           <div class="body" role="main">
             
   <div class="section" id="r-s-r6-classes-in-rpy2-python">
-<h1>R’s R6 classes in rpy2/Python<a class="headerlink" href="#r-s-r6-classes-in-rpy2-python" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+<h1><a class="toc-backref" href="#id1">R’s R6 classes in rpy2/Python</a><a class="headerlink" href="#r-s-r6-classes-in-rpy2-python" title="Permalink to this headline">¶</a></h1>
+<p>Repository: <a class="reference external" href="https://github.com/rpy2/rpy2-R6">https://github.com/rpy2/rpy2-R6</a></p>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#r-s-r6-classes-in-rpy2-python" id="id1">R’s R6 classes in rpy2/Python</a></p>
+<ul>
+<li><p><a class="reference internal" href="#introduction" id="id2">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#a-first-example" id="id3">A first example</a></p></li>
+<li><p><a class="reference internal" href="#r6a" id="id4">r6a</a></p></li>
+<li><p><a class="reference internal" href="#r6b" id="id5">r6b</a></p>
+<ul>
+<li><p><a class="reference internal" href="#dynamic-class-generation" id="id6">Dynamic class generation</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#indices-and-tables" id="id7">Indices and tables</a></p></li>
+</ul>
 </div>
 <div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>[R6](<a class="reference external" href="https://r6.r-lib.org/">https://r6.r-lib.org/</a>) is one of the OOP systems available
 to R programmers, and is relatively similar to other OOP systems
 non-R programmers might be familiar with. In the R6 authors’
@@ -46,33 +62,33 @@ to as classical object-oriented programming”.</p>
 wrappers for R6 classes and instances, and make the integration
 of R6-based class models into Python code as natural and as
 readable as possible.</p>
-</div>
-<div class="section" id="a-first-example">
-<h2>A first example<a class="headerlink" href="#a-first-example" title="Permalink to this headline">¶</a></h2>
-<p>To demonstrate how it is working, we use the R package
-<cite>scales</cite> (a dependency of <cite>ggplot2</cite>).</p>
-<p>In R’s R6, a class definition is an instance of class
-<cite>ClassFactoryGenerator</cite>, and its method <cite>new()</cite> is
-is used to create instances of class <cite>R6</cite>. In a way,
-the class <cite>ClassFactorGenerator</cite> is in fact closer to a
-metaclass, and its instances are like constructors
-for instance of the class of interest.</p>
-<p>This is relatively different from the way Python classes
-are defined and are working, so we tried to have a wrapper
+<p>OOP in R’s R6 is relatively different from the way Python classes
+are defined and are working.
+In R6 a class definition is an instance of class
+<cite>ClassFactoryGenerator</cite>, that has at one method (<cite>new()</cite>) acting
+as a factory that can create instances inheriting from class <cite>R6</cite>.
+One can see this a some form of metaprogramming, with instances class
+<cite>ClassFactorGenerator</cite> acting like metaclasses by defining the
+corresponding child classes dynamically.</p>
+<p>Despite the challenge, we are trying to have a wrapper
 that is both faithful to the R code, since this can make
 debugging or using the R documentation easier, while also
-allowing a rather Pythonic feel.</p>
+allowing a rather Pythonic feel. Currently there are two alternative wrappers:
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_R6.r6a</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_R6.r6b</span></code>.</p>
+</div>
+<div class="section" id="a-first-example">
+<h2><a class="toc-backref" href="#id3">A first example</a><a class="headerlink" href="#a-first-example" title="Permalink to this headline">¶</a></h2>
+<p>To demonstrate how it is working, we use the R package
+<cite>scales</cite> (a dependency of <cite>ggplot2</cite>).</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="go">import rpy2.rinterface</span>
+<span class="go">import rpy2.robjects</span>
+<span class="go">from rpy2.robjects.packages import importr</span>
+<span class="go">scales = importr(&#39;scales&#39;)</span>
+</pre></div>
+</div>
 <p>In this short tutorial we start with <cite>Range</cite>, an instance of class
 <cite>ClassFactoryGenerator</cite> in the package <cite>scales</cite>, and we wrap
 it to be an instance of our matching Python class.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_factory</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">R6DynamicClassGenerator</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">Range</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Automatic wrapping could be achieved through rpy2’s own conversion
-system. It is planned to offer the option to facilitate this in this package.</p>
-</div>
 <p>In R, creating a new instance of <cite>Range</cite> would be done with:</p>
 <div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">library</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
 <span class="n">obj</span> <span class="o">&lt;-</span> <span class="n">Range</span><span class="o">$</span><span class="nf">new</span><span class="p">()</span>
@@ -85,57 +101,92 @@ R side).</p>
 <span class="go">c(&quot;Range&quot;, &quot;R6&quot;)</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="r6a">
+<h2><a class="toc-backref" href="#id4">r6a</a><a class="headerlink" href="#r6a" title="Permalink to this headline">¶</a></h2>
+<p>The wrapper was kindly contributed in a PR for rpy2 by Matthew Wardrop (&#64;matthewwardrop),
+and was only slightly adapted to use the recent <cite>SupportsSEXP</cite> interface in rpy2.</p>
+<p>In this approach the class <cite>ClassFactoryGenerator</cite> in R is mapped to <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_R6.r6a.RClass</span></code>.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_factory_r6a</span> <span class="o">=</span> <span class="n">r6a</span><span class="o">.</span><span class="n">R6Class</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">Range</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_r6a</span> <span class="o">=</span> <span class="n">range_factory_r6a</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The instance is a generic <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_R6.r6a.R6</span></code> in Python, with the R class name available
+through a property of that object:</p>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">range_r6a</span><span class="p">)</span>
+<span class="go">rpy2_R6.r6a.R6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">range_r6b</span><span class="o">.</span><span class="n">class_name</span>
+<span class="go">&#39;Scale&#39;</span>
+</pre></div>
+</div>
+<p>The properties and methods available for the object in R are dynamically resolved from the Python side,
+and private attributes in the R6 definitions have an underscore prefixed to their attribute name in Python.
+For example, the private method R6 <cite>clone</cite> for the object is accessed with <cite>_clone</cite> in Python:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_r6a</span><span class="o">.</span><span class="n">_clone</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="r6b">
+<h2><a class="toc-backref" href="#id5">r6b</a><a class="headerlink" href="#r6b" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_factory_r6b</span> <span class="o">=</span> <span class="n">r6b</span><span class="o">.</span><span class="n">R6DynamicClassGenerator</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">Range</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Automatic wrapping could be achieved through rpy2’s own conversion
+system. It is planned to offer the option to facilitate this in this package.</p>
+</div>
 <p>We are able to write essentially the same code in Python:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span> <span class="o">=</span> <span class="n">range_factory</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">range_r6b</span> <span class="o">=</span> <span class="n">range_factory_r6b</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The type of the resulting object is a Python class <cite>Range</cite>:</p>
-<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-<span class="go">rpy2_R6.R6.Range</span>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">range_r6b</span><span class="p">)</span>
+<span class="go">rpy2_R6.r6b.Range</span>
 </pre></div>
 </div>
-</div>
 <div class="section" id="dynamic-class-generation">
-<h2>Dynamic class generation<a class="headerlink" href="#dynamic-class-generation" title="Permalink to this headline">¶</a></h2>
-<p>One must note that we never explicitly defined the class <cite>Range</cite>; it
+<h3><a class="toc-backref" href="#id6">Dynamic class generation</a><a class="headerlink" href="#dynamic-class-generation" title="Permalink to this headline">¶</a></h3>
+<p>You’ll note that we never explicitly defined the class <cite>Range</cite>; it
 was dynamically created by our package
 to reflect the R class definition from
 the <cite>ClassFactoryGenerator</cite> instance.</p>
-<p>The use of a constructor method <cite>new</cite> is not the
-most common way to instanciate objects in python though,
-so we made our method <cite>new</cite> something a little unconventional:
-it is a nested class.
-Since the attribute is a class, it can be bound to a symbol for that
-class. For example:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Range</span> <span class="o">=</span> <span class="n">range_factory</span><span class="o">.</span><span class="n">new</span>
-<span class="n">myrange</span> <span class="o">=</span> <span class="n">Range</span><span class="p">()</span>
+<p>The method <cite>new</cite> is a factory:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">myrange</span> <span class="o">=</span> <span class="n">range_factory_r6b</span><span class="o">.</span><span class="n">new</span>
+</pre></div>
+</div>
+<p>The underlying class is:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Range</span> <span class="o">=</span> <span class="n">range_factory_r6b</span><span class="o">.</span><span class="n">__R6CLASS__</span>
 </pre></div>
 </div>
 <p>The lineage (inheritance tree) for the Python class <cite>Range</cite> is
-dynamically generated to match the one for the R R6 class
-definition.</p>
+dynamically generated to match the one for the R6 class
+definition in R.</p>
 <div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">inspect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inspect</span><span class="o">.</span><span class="n">getmro</span><span class="p">(</span><span class="n">Range</span><span class="p">)</span>
-<span class="go">(rpy2_R6.R6.Range,</span>
-<span class="go"> rpy2_R6.R6.R6,</span>
+<span class="go">(rpy2_R6.r6b.Range,</span>
+<span class="go"> rpy2_R6.r6b.R6,</span>
 <span class="go"> rpy2.rinterface_lib.sexp.SupportsSEXP,</span>
 <span class="go"> object)</span>
 </pre></div>
 </div>
 <p>An other example with a longer lineage:</p>
-<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DiscreteRange</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">R6DynamicClassGenerator</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">DiscreteRange</span><span class="p">)</span><span class="o">.</span><span class="n">new</span>
+<div class="highlight-pycon3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DiscreteRange</span> <span class="o">=</span> <span class="n">r6b</span><span class="o">.</span><span class="n">R6DynamicClassGenerator</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">DiscreteRange</span><span class="p">)</span><span class="o">.</span><span class="n">new</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inspect</span><span class="o">.</span><span class="n">getmro</span><span class="p">(</span><span class="n">DiscreteRange</span><span class="p">)</span>
-<span class="go">(rpy2_R6.R6.DiscreteRange,</span>
-<span class="go"> rpy2_R6.R6.Range,</span>
-<span class="go"> rpy2_R6.R6.R6,</span>
+<span class="go">(rpy2_R6.r6b.DiscreteRange,</span>
+<span class="go"> rpy2_R6.r6b.Range,</span>
+<span class="go"> rpy2_R6.r6b.R6,</span>
 <span class="go"> rpy2.rinterface_lib.sexp.SupportsSEXP,</span>
 <span class="go"> object)</span>
 </pre></div>
 </div>
 </div>
 </div>
+</div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id7">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
@@ -193,7 +244,7 @@ definition.</p>
       &copy;2020, .
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
