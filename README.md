@@ -6,4 +6,4 @@ the handling of R6 objects ([R6 is an OOP system for R](https://r6.r-lib.org/)).
 
 (an earlier proof-of-concept was in @matthewwardrop's PR on bitbucket - https://bitbucket.org/rpy2/rpy2/pull-requests/73 - and this is a proposed-yet-currently incomplete evolution of it)
 
-The [Sphinx documentation](doc/index.rst) has examples of usage.
+An HTML build of the documention in is available from the rpy2 project pages: https://rpy2.github.io/r6_doc.html
