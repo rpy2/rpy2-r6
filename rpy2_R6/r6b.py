@@ -29,7 +29,6 @@ R6_weakpack = WeakPackage(R6_pack._env,
                           symbol_r2python=R6_pack._symbol_r2python,
                           symbol_resolve=R6_pack._symbol_resolve)
 
-dollar = rpy2.robjects.baseenv['$']
 
 # This will map an `rid` (identifier for an R object of class
 # R6ClassGenerator) to a Python class inheriting from R6.

@@ -34,3 +34,5 @@ __DEFAULT_GENERATOR_ATTRS__ = {
     'undebug': ATTR_TYPE.METHOD,
     'unlock': ATTR_TYPE.METHOD
 }
+
+dollar = rpy2.robjects.baseenv['$']
