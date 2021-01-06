@@ -1,5 +1,5 @@
 import enum
-
+import rpy2.robjects
 
 class ATTR_TYPE(enum.Enum):
     PROPERTY = 1
