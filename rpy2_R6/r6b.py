@@ -55,8 +55,9 @@ def r6_method(name: str) -> (
       The R object associated with the attribute.
     """
     # TODO: prefetch the dispatched `$` to improve performances?
-    def inner(self):
-        return dollar(self, name)
+    def inner(self, *args, **kwargs):
+        res = dollar(self, name)(*args, **kwargs)
+        return res
     return inner
 
 
@@ -196,7 +197,7 @@ class R6Meta(abc.ABCMeta):
                 if hasattr(b, '__DEFAULT_ATTRS__'):
                     default_attrs = b.__DEFAULT_ATTRS__
                     break
-        # If still no
+        # If still nothing.
         if default_attrs is None:
             raise ValueError(
                 'Classes using the type {} must have an '
