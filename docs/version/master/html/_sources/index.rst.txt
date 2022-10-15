@@ -76,7 +76,7 @@ r6a
 The wrapper was kindly contributed in a PR for rpy2 by Matthew Wardrop (@matthewwardrop),
 and was only slightly adapted to use the recent `SupportsSEXP` interface in rpy2.
 
-In this approach the class `ClassFactoryGenerator` in R is mapped to :class:`rpy2_R6.r6a.RClass`.
+In this approach the class `ClassFactoryGenerator` in R is mapped to :class:`rpy2_R6.r6a.R6Class`.
 
 .. testcode:: first_example
 
