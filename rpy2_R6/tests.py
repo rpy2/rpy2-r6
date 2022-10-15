@@ -14,8 +14,11 @@ def _list_names(obj):
         return tuple(obj.names)
 
 
-def _test_attributes_r6a(obj, pub_method_names, pub_field_names):
+def _test_attributes_r6a_cls(obj, pub_method_names, pub_field_names):
     assert all(x in _list_names(obj._public_fields) for x in pub_field_names)
+
+def _test_attributes_r6a_instance(obj, pub_method_names, pub_field_names):
+    assert all(hasattr(obj, x) for x in pub_field_names)
 
 
 def _test_attributes_r6b(obj, pub_method_names, pub_field_names):
@@ -25,8 +28,8 @@ def _test_attributes_r6b(obj, pub_method_names, pub_field_names):
 
 @pytest.mark.parametrize(
     'constructor,classname_getter, test_attributes',
-    ((r6a.R6Class, lambda x: x.class_name, _test_attributes_r6a),
-     (r6a.R6Class.from_robj, lambda x: x.class_name, _test_attributes_r6a),
+    ((r6a.R6Class, lambda x: x.class_name, _test_attributes_r6a_cls),
+     (r6a.R6Class.from_robj, lambda x: x.class_name, _test_attributes_r6a_instance),
      (r6b.R6StaticClassGenerator, lambda x: x.classname[0], _test_attributes_r6b))
 )
 @pytest.mark.parametrize(

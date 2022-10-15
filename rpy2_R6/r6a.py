@@ -10,25 +10,23 @@ import rpy2_R6.utils
 class R6Object(_rinterface_capi.SupportsSEXP):
     """Base class for R6 objects."""
 
-    __CACHE = {}
+    __CACHE = weakref.WeakValueDictionary()
     __PRIVATE_ATTRS__ = set()
 
     __slots__ = ('_robj', )
 
     @classmethod
-    def from_robj(cls, robj):
+    def from_robj(cls, robj: _rinterface_capi.SupportsSEXP):
+        assert isinstance(robj, _rinterface_capi.SupportsSEXP)
         if id(robj) not in cls.__CACHE:
-            instance = cls(robj)
-            cls.__CACHE[id(robj)] = weakref.ref(
-                instance,
-                lambda x: x._R6Object__CACHE.pop(id(x))
-            )
+            clsinstance = cls(robj)
+            cls.__CACHE[id(robj)] = clsinstance
         return cls.__CACHE[id(robj)]()
 
     def __init__(self, robj):
-        self._robj = robj
         if robj is robjects.NULL:
             raise ValueError
+        self._robj = robj
 
     def __dir__(self):
         keys = set(self._robj.keys())
@@ -77,6 +75,7 @@ class R6Object(_rinterface_capi.SupportsSEXP):
 
 
 class R6Class(R6Object):
+    """Mapping for R6::ClassFactoryGenerator() in R."""
 
     __PRIVATE_ATTRS__ = set(rpy2_R6.utils.__DEFAULT_GENERATOR_ATTRS__.keys())
 
