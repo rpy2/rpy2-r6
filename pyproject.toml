@@ -29,6 +29,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+test = ["pytest"]
+
 [project.urls]
 Homepage = "https://rpy2.github.io/rpy2-R6/"
 Documentation = "https://rpy2.github.io/rpy2-R6/version/main/html/index.html"
