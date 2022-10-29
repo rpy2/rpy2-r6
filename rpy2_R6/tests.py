@@ -17,6 +17,7 @@ def _list_names(obj):
 def _test_attributes_r6a_cls(obj, pub_method_names, pub_field_names):
     assert all(x in _list_names(obj._public_fields) for x in pub_field_names)
 
+
 def _test_attributes_r6a_instance(obj, pub_method_names, pub_field_names):
     assert all(hasattr(obj, x) for x in pub_field_names)
 
