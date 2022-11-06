@@ -1,8 +1,8 @@
 import pytest
 
 import inspect
-import rpy2_R6.r6a as r6a
-import rpy2_R6.r6b as r6b
+import rpy2_r6.r6a as r6a
+import rpy2_r6.r6b as r6b
 import rpy2.rinterface as ri
 import rpy2.robjects as ro
 
