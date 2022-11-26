@@ -77,7 +77,7 @@ corresponding child classes dynamically.</p>
 that is both faithful to the R code, since this can make
 debugging or using the R documentation easier, while also
 allowing a rather Pythonic feel. Currently there are two alternative wrappers:
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_R6.r6a</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_R6.r6b</span></code>.</p>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_r6.r6a</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">rpy2_r6.r6b</span></code>.</p>
 </section>
 <section id="a-first-example">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">A first example</a><a class="headerlink" href="#a-first-example" title="Permalink to this heading">¶</a></h2>
@@ -109,17 +109,17 @@ R side).</p>
 <h2><a class="toc-backref" href="#id4" role="doc-backlink">r6a</a><a class="headerlink" href="#r6a" title="Permalink to this heading">¶</a></h2>
 <p>The wrapper was kindly contributed in a PR for rpy2 by Matthew Wardrop (&#64;matthewwardrop),
 and was only slightly adapted to use the recent <cite>SupportsSEXP</cite> interface in rpy2.</p>
-<p>In this approach the class <cite>ClassFactoryGenerator</cite> in R is mapped to <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_R6.r6a.R6Class</span></code>.</p>
+<p>In this approach the class <cite>ClassFactoryGenerator</cite> in R is mapped to <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_r6.r6a.R6Class</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">range_factory_r6a</span> <span class="o">=</span> <span class="n">r6a</span><span class="o">.</span><span class="n">R6Class</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">Range</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">range_r6a</span> <span class="o">=</span> <span class="n">range_factory_r6a</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The instance is a generic <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_R6.r6a.R6</span></code> in Python, with the R class name available
+<p>The instance is a generic <code class="xref py py-class docutils literal notranslate"><span class="pre">rpy2_r6.r6a.R6</span></code> in Python, with the R class name available
 through a property of that object:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">range_r6a</span><span class="p">)</span>
-<span class="go">rpy2_R6.r6a.R6</span>
+<span class="go">rpy2_r6.r6a.R6</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">range_r6b</span><span class="o">.</span><span class="n">class_name</span>
 <span class="go">&#39;Scale&#39;</span>
 </pre></div>
@@ -147,7 +147,7 @@ system. It is planned to offer the option to facilitate this in this package.</p
 </div>
 <p>The type of the resulting object is a Python class <cite>Range</cite>:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">range_r6b</span><span class="p">)</span>
-<span class="go">rpy2_R6.r6b.Range</span>
+<span class="go">rpy2_r6.r6b.Range</span>
 </pre></div>
 </div>
 <section id="dynamic-class-generation">
@@ -169,8 +169,8 @@ dynamically generated to match the one for the R6 class
 definition in R.</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">inspect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inspect</span><span class="o">.</span><span class="n">getmro</span><span class="p">(</span><span class="n">Range</span><span class="p">)</span>
-<span class="go">(rpy2_R6.r6b.Range,</span>
-<span class="go"> rpy2_R6.r6b.R6,</span>
+<span class="go">(rpy2_r6.r6b.Range,</span>
+<span class="go"> rpy2_r6.r6b.R6,</span>
 <span class="go"> rpy2.rinterface_lib.sexp.SupportsSEXP,</span>
 <span class="go"> object)</span>
 </pre></div>
@@ -178,9 +178,9 @@ definition in R.</p>
 <p>An other example with a longer lineage:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DiscreteRange</span> <span class="o">=</span> <span class="n">r6b</span><span class="o">.</span><span class="n">R6DynamicClassGenerator</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">DiscreteRange</span><span class="p">)</span><span class="o">.</span><span class="n">new</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inspect</span><span class="o">.</span><span class="n">getmro</span><span class="p">(</span><span class="n">DiscreteRange</span><span class="p">)</span>
-<span class="go">(rpy2_R6.r6b.DiscreteRange,</span>
-<span class="go"> rpy2_R6.r6b.Range,</span>
-<span class="go"> rpy2_R6.r6b.R6,</span>
+<span class="go">(rpy2_r6.r6b.DiscreteRange,</span>
+<span class="go"> rpy2_r6.r6b.Range,</span>
+<span class="go"> rpy2_r6.r6b.R6,</span>
 <span class="go"> rpy2.rinterface_lib.sexp.SupportsSEXP,</span>
 <span class="go"> object)</span>
 </pre></div>
