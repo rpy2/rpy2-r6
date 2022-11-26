@@ -33,7 +33,7 @@ Despite the challenge, we are trying to have a wrapper
 that is both faithful to the R code, since this can make
 debugging or using the R documentation easier, while also
 allowing a rather Pythonic feel. Currently there are two alternative wrappers:
-:mod:`rpy2_R6.r6a` and :mod:`rpy2_R6.r6b`.
+:mod:`rpy2_r6.r6a` and :mod:`rpy2_r6.r6b`.
 
 
 A first example
@@ -76,7 +76,7 @@ r6a
 The wrapper was kindly contributed in a PR for rpy2 by Matthew Wardrop (@matthewwardrop),
 and was only slightly adapted to use the recent `SupportsSEXP` interface in rpy2.
 
-In this approach the class `ClassFactoryGenerator` in R is mapped to :class:`rpy2_R6.r6a.R6Class`.
+In this approach the class `ClassFactoryGenerator` in R is mapped to :class:`rpy2_r6.r6a.R6Class`.
 
 .. testcode:: first_example
 
@@ -87,13 +87,13 @@ In this approach the class `ClassFactoryGenerator` in R is mapped to :class:`rpy
 
    range_r6a = range_factory_r6a.new()
 
-The instance is a generic :class:`rpy2_R6.r6a.R6` in Python, with the R class name available
+The instance is a generic :class:`rpy2_r6.r6a.R6` in Python, with the R class name available
 through a property of that object:
 
 .. doctest::
 
    >>> type(range_r6a)
-   rpy2_R6.r6a.R6
+   rpy2_r6.r6a.R6
    >>> range_r6b.class_name
    'Scale'
 
@@ -130,7 +130,7 @@ The type of the resulting object is a Python class `Range`:
 .. doctest::
 
    >>> type(range_r6b)
-   rpy2_R6.r6b.Range
+   rpy2_r6.r6b.Range
 
 
 Dynamic class generation
@@ -161,8 +161,8 @@ definition in R.
 
    >>> import inspect
    >>> inspect.getmro(Range)
-   (rpy2_R6.r6b.Range,
-    rpy2_R6.r6b.R6,
+   (rpy2_r6.r6b.Range,
+    rpy2_r6.r6b.R6,
     rpy2.rinterface_lib.sexp.SupportsSEXP,
     object)
 
@@ -172,9 +172,9 @@ An other example with a longer lineage:
 
    >>> DiscreteRange = r6b.R6DynamicClassGenerator(scales.DiscreteRange).new
    >>> inspect.getmro(DiscreteRange)
-   (rpy2_R6.r6b.DiscreteRange,
-    rpy2_R6.r6b.Range,
-    rpy2_R6.r6b.R6,
+   (rpy2_r6.r6b.DiscreteRange,
+    rpy2_r6.r6b.Range,
+    rpy2_r6.r6b.R6,
     rpy2.rinterface_lib.sexp.SupportsSEXP,
     object)
 

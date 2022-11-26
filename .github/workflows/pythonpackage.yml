@@ -13,9 +13,9 @@ jobs:
         r-version: [4.0, 'release']
         os: [ubuntu-20.04, ubuntu-latest, macOS-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up R ${{ matrix.r-version }}
@@ -33,7 +33,7 @@ jobs:
     - name: Lint with flake8
       run: |
         pip install flake8
-        flake8 rpy2_R6 --count --max-complexity=10 --max-line-length=127 --statistics
+        flake8 rpy2_r6 --count --max-complexity=10 --max-line-length=127 --statistics
     - name: Install package
       run: |
         python setup.py install
@@ -41,4 +41,4 @@ jobs:
       run: |
         export LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):${LD_LIBRARY_PATH}
         pip install pytest codecov pytest-cov
-        pytest --cov rpy2_R6.R6 rpy2_R6/tests*
+        pytest --cov rpy2_r6.R6 rpy2_r6/tests*

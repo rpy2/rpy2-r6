@@ -4,7 +4,7 @@ from rpy2.rinterface_lib import _rinterface_capi
 import rpy2.robjects
 from rpy2.robjects.packages import (importr,
                                     WeakPackage)
-import rpy2_R6.utils
+import rpy2_r6.utils
 import textwrap
 import typing
 import warnings
@@ -29,7 +29,7 @@ R6_weakpack = WeakPackage(R6_pack._env,
                           symbol_r2python=R6_pack._symbol_r2python,
                           symbol_resolve=R6_pack._symbol_resolve)
 
-dollar = rpy2_R6.utils.dollar
+dollar = rpy2_r6.utils.dollar
 
 # This will map an `rid` (identifier for an R object of class
 # R6ClassGenerator) to a Python class inheriting from R6.
@@ -224,9 +224,9 @@ def is_r6classgenerator(robj: rpy2.rinterface.Sexp) -> bool:
 
 
 _attr_func_map = {
-    rpy2_R6.utils.ATTR_TYPE.METHOD: r6_method,
-    rpy2_R6.utils.ATTR_TYPE.FACTORYMETHOD: r6_factorymethod,
-    rpy2_R6.utils.ATTR_TYPE.PROPERTY: r6_property,
+    rpy2_r6.utils.ATTR_TYPE.METHOD: r6_method,
+    rpy2_r6.utils.ATTR_TYPE.FACTORYMETHOD: r6_factorymethod,
+    rpy2_r6.utils.ATTR_TYPE.PROPERTY: r6_property,
 }
 
 
@@ -243,7 +243,7 @@ class R6ClassGenerator(rpy2.robjects.Environment,
 
     __DEFAULT_ATTRS__ = dict(
         (key, _attr_func_map[value])
-        for key, value in rpy2_R6.utils.__DEFAULT_GENERATOR_ATTRS__.items()
+        for key, value in rpy2_r6.utils.__DEFAULT_GENERATOR_ATTRS__.items()
     )
 
     def __init__(self, robj: rpy2.rinterface.SexpEnvironment):

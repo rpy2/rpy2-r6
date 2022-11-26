@@ -40,12 +40,12 @@ Tracker = "https://github.com/rpy2/rpy2-R6/issue"
 
 [tool.setuptools]
 packages = [
-    "rpy2_R6"
+    "rpy2_r6"
 ]
 
 [tool.setuptools.dynamic]
-version = { attr = "rpy2_R6.__version__" }
+version = { attr = "rpy2_r6.__version__" }
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = ["rpy2_R6/tests"]
+testpaths = ["rpy2_r6/tests"]

@@ -4,7 +4,7 @@ import weakref
 import rpy2.rinterface_lib as rinterface_lib
 import rpy2.rinterface_lib._rinterface_capi as _rinterface_capi
 import rpy2.robjects as robjects
-import rpy2_R6.utils
+import rpy2_r6.utils
 
 
 class R6Object(_rinterface_capi.SupportsSEXP):
@@ -77,7 +77,7 @@ class R6Object(_rinterface_capi.SupportsSEXP):
 class R6Class(R6Object):
     """Mapping for R6::ClassFactoryGenerator() in R."""
 
-    __PRIVATE_ATTRS__ = set(rpy2_R6.utils.__DEFAULT_GENERATOR_ATTRS__.keys())
+    __PRIVATE_ATTRS__ = set(rpy2_r6.utils.__DEFAULT_GENERATOR_ATTRS__.keys())
 
     __slots__ = ()
 
