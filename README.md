@@ -1,4 +1,4 @@
-# rpy2-R6
+# rpy2-r6
 ![Python package](https://github.com/rpy2/rpy2-R6/workflows/Python%20package/badge.svg)
 
 Extension package for [`rpy2`](https://github.com/rpy2/rpy2) to faciliate
