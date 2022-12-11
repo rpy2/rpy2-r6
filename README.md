@@ -1,5 +1,6 @@
 # rpy2-r6
-![Python package](https://github.com/rpy2/rpy2-R6/workflows/Python%20package/badge.svg)
+[![pypi](https://img.shields.io/pypi/v/rpy2-r6.svg?style=flat-square)](https://pypi.python.org/pypi/rpy2-r6)
+![Python package](https://github.com/rpy2/rpy2-r6/workflows/Python%20package/badge.svg)
 
 Extension package for [`rpy2`](https://github.com/rpy2/rpy2) to faciliate
 the handling of R6 objects ([R6 is an OOP system for R](https://r6.r-lib.org/)).
