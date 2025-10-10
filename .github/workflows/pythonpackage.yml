@@ -11,9 +11,15 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+    - name: Create venv
+      run: |
+           uv venv --no-project --no-config --no-managed-python rpy2-r6-env
     - name: Lint with flake8
       run: |
-        pip install flake8
+        source rpy2-r6-env/bin/activate
+        uv pip install flake8
         flake8 rpy2_r6 --count --max-complexity=10 --max-line-length=127 --statistics
   build:
     runs-on: ${{ matrix.os }}
@@ -29,6 +35,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+    - name: Create venv
+      run: |
+           uv venv --no-project --no-config --no-managed-python rpy2-r6-env
     - name: Set up R ${{ matrix.r-version }}
       uses: r-lib/actions/setup-r@v2
       with:
@@ -39,13 +50,15 @@ jobs:
       shell: Rscript {0}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install rpy2
+        source rpy2-r6-env/bin/activate
+        uv pip install rpy2
     - name: Install package
       run: |
-        python setup.py install
+        source rpy2-r6-env/bin/activate
+        uv pip install .
     - name: Test with pytest
       run: |
+        source rpy2-r6-env/bin/activate
         export LD_LIBRARY_PATH=$(python -m rpy2.situation LD_LIBRARY_PATH):${LD_LIBRARY_PATH}
-        pip install pytest codecov pytest-cov
+        uv pip install pytest codecov pytest-cov
         pytest --cov rpy2_r6.R6 rpy2_r6/tests*
