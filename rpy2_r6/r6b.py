@@ -12,7 +12,7 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     R6_pack = importr('R6', on_conflict='warn')
 
-TARGET_VERSION = '2.5.'
+TARGET_VERSION = '2.6.'
 
 if not R6_pack.__version__.startswith(TARGET_VERSION):
     warnings.warn(
